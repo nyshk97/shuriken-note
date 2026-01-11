@@ -1,4 +1,4 @@
-# 0000 <決定内容のタイトル>
+# 0000 <Decision Title>
 
 Date: YYYY-MM-DD
 
@@ -6,13 +6,13 @@ Date: YYYY-MM-DD
 Accepted | Proposed | Deprecated
 
 ## Context
-（なぜこの決定が必要だったか）
+(Why this decision is necessary. Describe the background and problem.)
 
 ## Decision
-（何を選んだか）
+(What was decided.)
 
 ## Alternatives Considered
-（他に検討した案）
+(Other options that were evaluated.)
 
 ## Consequences
-（得るもの / 失うもの）
+(What we gain and what we lose as a result of this decision.)
