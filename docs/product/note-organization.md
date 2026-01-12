@@ -22,6 +22,12 @@
 - Maximum hierarchy depth is limited to two levels (parent → child; no grandchildren).
 - The parent-child relationship exists to provide semantic grouping and to support permission and archive state inheritance.
 
+## Public Note URL Policy
+
+Public notes are exposed via URLs composed of a human-readable slug and a stable UUID.
+
+This separation ensures readable URLs for humans while keeping internal references stable even if note titles change.
+
 ## Note Identifier Policy
 
 Notes are internally identified by stable UUIDs.
@@ -50,6 +56,22 @@ This separation ensures:
 - Child notes inherit the visibility (Private / Public) of their parent.
 - When a parent note is moved to Archived, its child notes are treated as Archived as well.
 - This avoids introducing complex access-control or lifecycle management rules.
+
+## Deletion Policy
+
+Archiving is not deletion.
+
+Archived notes can be restored by the user at any time.
+
+When a parent note is archived, all child notes are archived as well.
+Archiving a child note does not affect its parent.
+
+Permanent deletion is only available for archived notes and requires explicit user action.
+
+When a parent note is permanently deleted, all child notes are permanently deleted as well.
+Deleting a child note does not affect its parent.
+
+This one-way lifecycle propagation keeps behavior intuitive and prevents accidental data loss.
 
 ## Rejected Alternatives
 
