@@ -8,6 +8,14 @@ and major technical decisions are documented as ADRs (Architecture Decision Reco
 
 ---
 
+## Product Vision
+
+The product philosophy and design intent of Shuriken Note are documented here:
+
+- [Product Vision](https://github.com/nyshk97/shuriken-note/blob/main/docs/product/vision.md)
+
+---
+
 ## Try Demo
 
 *Public demo environment will be available soon.*
