@@ -24,16 +24,16 @@ and major technical decisions are documented as ADRs (Architecture Decision Reco
 
 ```mermaid
 flowchart TD
-    Web[Next.js (Vercel)]
-    CF[CloudFront]
-    ALB[Application Load Balancer]
-    API[Rails API (ECS Fargate)]
-    DB[(RDS PostgreSQL)]
-    S3[(S3 Storage)]
+  Web["Next.js (Vercel)"]
+  CF["CloudFront"]
+  ALB["Application Load Balancer"]
+  API["Rails API (ECS Fargate)"]
+  DB[("RDS PostgreSQL")]
+  S3[("S3 Storage")]
 
-    Web --> CF --> ALB --> API --> DB
-    API --> S3
-    Web --> S3
+  Web --> CF --> ALB --> API --> DB
+  API --> S3
+  Web --> S3
 ```
 
 * Web frontend: Next.js on Vercel
