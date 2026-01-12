@@ -1,2 +1,34 @@
+# Cursor / Private
 .cursor/
 .private/
+
+# Rails - Ignore bundler config
+apps/api/.bundle
+
+# Rails - Ignore the default SQLite database
+apps/api/db/*.sqlite3
+apps/api/db/*.sqlite3-*
+
+# Rails - Ignore all logfiles and tempfiles
+apps/api/log/*
+apps/api/tmp/*
+!apps/api/log/.keep
+!apps/api/tmp/.keep
+
+# Rails - Ignore pidfiles, but keep the directory
+apps/api/tmp/pids/*
+!apps/api/tmp/pids/.keep
+
+# Rails - Ignore storage (uploaded files in development)
+apps/api/storage/*
+!apps/api/storage/.keep
+
+# Rails - Ignore master key for decrypting credentials and more
+apps/api/config/master.key
+apps/api/config/credentials/*.key
+
+# Rails - Ignore precompiled assets (not applicable for API-only, but good to have)
+apps/api/public/assets
+
+# macOS
+.DS_Store
