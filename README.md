@@ -25,6 +25,7 @@ and major technical decisions are documented as ADRs (Architecture Decision Reco
 ```mermaid
 flowchart TD
   Web["Next.js (Vercel)"]
+  IOS["iOS App"]
   CF["CloudFront"]
   ALB["Application Load Balancer"]
   API["Rails API (ECS Fargate)"]
@@ -32,8 +33,10 @@ flowchart TD
   S3[("S3 Storage")]
 
   Web --> CF --> ALB --> API --> DB
+  IOS --> CF
   API --> S3
   Web --> S3
+
 ```
 
 * Web frontend: Next.js on Vercel
