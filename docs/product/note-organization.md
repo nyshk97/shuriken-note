@@ -22,6 +22,19 @@
 - Maximum hierarchy depth is limited to two levels (parent → child; no grandchildren).
 - The parent-child relationship exists to provide semantic grouping and to support permission and archive state inheritance.
 
+## Note Identifier Policy
+
+Notes are internally identified by stable UUIDs.
+
+Human-readable slugs derived from titles are used only for display and URLs,
+and may change without breaking internal links.
+
+This separation ensures:
+
+- Internal references remain stable even if titles change
+- URLs remain readable and shareable
+- Users never need to interact with raw identifiers
+
 ## Inline Child Note Linking
 
 - Notes may reference child notes from arbitrary positions within their content.
