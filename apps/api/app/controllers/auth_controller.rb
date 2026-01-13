@@ -1,20 +1,4 @@
 class AuthController < ApplicationController
-  # POST /auth/register
-  def register
-    user = User.new(user_params)
-
-    if user.save
-      tokens = generate_tokens(user)
-      render json: {
-        user: user_response(user),
-        access_token: tokens[:access_token],
-        refresh_token: tokens[:refresh_token]
-      }, status: :created
-    else
-      render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
-    end
-  end
-
   # POST /auth/login
   def login
     user = User.find_by(email: params[:email]&.downcase)
@@ -63,10 +47,6 @@ class AuthController < ApplicationController
   end
 
   private
-
-  def user_params
-    params.permit(:email, :password, :password_confirmation)
-  end
 
   def generate_tokens(user)
     access_token = JwtService.encode_access_token(user_id: user.id)
