@@ -1,10 +1,10 @@
-.PHONY: bash bundle console migrate credentials help
+.PHONY: bash bundle console migrate credentials rspec help
 
 bash:
 	docker compose exec api bash
 
 bundle:
-	docker compose exec api bundle install
+	docker compose run --rm api bundle install
 
 console:
 	docker compose exec api bin/rails console
@@ -15,6 +15,9 @@ migrate:
 credentials:
 	docker compose exec -e EDITOR=vim api bin/rails credentials:edit
 
+rspec:
+	docker compose exec -e RAILS_ENV=test api bundle exec rspec
+
 help:
 	@echo "Usage: make [target]"
 	@echo ""
@@ -23,3 +26,4 @@ help:
 	@echo "  console       Open Rails console"
 	@echo "  migrate       Run database migrations"
 	@echo "  credentials   Edit Rails credentials"
+	@echo "  rspec         Run RSpec tests"
