@@ -9,7 +9,8 @@ class CreateNotes < ActiveRecord::Migration[8.0]
       t.string :title,   null: false, default: ''
       t.text   :body,    null: false, default: ''
       t.string :slug,    null: false
-      t.string :status,  null: false, default: 'private'
+      # Values: personal, published, archived
+      t.string :status,  null: false, default: 'personal'
 
       t.timestamps
     end

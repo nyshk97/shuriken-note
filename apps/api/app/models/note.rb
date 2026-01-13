@@ -2,10 +2,10 @@
 
 class Note < ApplicationRecord
   enum :status, {
-    private: 'private',
-    public: 'public',
+    personal: 'personal',
+    published: 'published',
     archived: 'archived'
-  }, default: :private
+  }, default: :personal
 
   validates :slug, presence: true
   validates :status, presence: true

@@ -19,7 +19,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_000001) do
     t.text "body", default: "", null: false
     t.datetime "created_at", null: false
     t.string "slug", null: false
-    t.string "status", default: "private", null: false
+    t.string "status", default: "personal", null: false
     t.string "title", default: "", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
