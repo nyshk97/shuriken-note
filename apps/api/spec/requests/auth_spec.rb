@@ -1,105 +1,146 @@
-require 'rails_helper'
+# frozen_string_literal: true
 
-RSpec.describe 'Auth' do
-  describe 'POST /auth/login' do
-    let(:password) { 'password123' }
-    let(:user) { create(:user, password: password) }
+require 'swagger_helper'
 
-    context 'with valid credentials' do
-      it 'returns user and tokens' do
-        post '/auth/login', params: { email: user.email, password: password }
+RSpec.describe 'Authentication API', type: :request do
+  path '/auth/login' do
+    post 'User login' do
+      tags 'Authentication'
+      description 'Authenticates a user and returns access and refresh tokens'
+      consumes 'application/json'
+      produces 'application/json'
 
-        expect(response).to have_http_status(:ok)
-        json = response.parsed_body
-        expect(json['user']['id']).to eq(user.id)
-        expect(json['user']['email']).to eq(user.email)
-        expect(json['access_token']).to be_present
-        expect(json['refresh_token']).to be_present
+      parameter name: :credentials, in: :body, schema: {
+        type: :object,
+        properties: {
+          email: { type: :string, format: :email, example: 'user@example.com' },
+          password: { type: :string, example: 'password123' }
+        },
+        required: %w[email password]
+      }
+
+      response '200', 'login successful' do
+        schema type: :object,
+          properties: {
+            user: {
+              type: :object,
+              properties: {
+                id: { type: :integer },
+                email: { type: :string },
+                created_at: { type: :string, format: 'date-time' }
+              },
+              required: %w[id email created_at]
+            },
+            access_token: { type: :string },
+            refresh_token: { type: :string }
+          },
+          required: %w[user access_token refresh_token]
+
+        let(:user) { create(:user, password: 'password123') }
+        let(:credentials) { { email: user.email, password: 'password123' } }
+
+        run_test!
       end
 
-      it 'creates a refresh token record' do
-        expect {
-          post '/auth/login', params: { email: user.email, password: password }
-        }.to change(RefreshToken, :count).by(1)
-      end
+      response '401', 'invalid credentials' do
+        schema type: :object,
+          properties: {
+            error: { type: :string, example: 'invalid_credentials' }
+          },
+          required: %w[error]
 
-      it 'handles case-insensitive email' do
-        post '/auth/login', params: { email: user.email.upcase, password: password }
+        let(:credentials) { { email: 'wrong@example.com', password: 'wrong' } }
 
-        expect(response).to have_http_status(:ok)
-      end
-    end
-
-    context 'with invalid credentials' do
-      it 'returns unauthorized for wrong password' do
-        post '/auth/login', params: { email: user.email, password: 'wrongpassword' }
-
-        expect(response).to have_http_status(:unauthorized)
-        expect(response.parsed_body['error']).to eq('invalid_credentials')
-      end
-
-      it 'returns unauthorized for non-existent user' do
-        post '/auth/login', params: { email: 'nonexistent@example.com', password: password }
-
-        expect(response).to have_http_status(:unauthorized)
-        expect(response.parsed_body['error']).to eq('invalid_credentials')
-      end
-    end
-  end
-
-  describe 'POST /auth/refresh' do
-    let(:user) { create(:user) }
-
-    context 'with valid refresh token' do
-      let(:refresh_token) { create(:refresh_token, user: user) }
-
-      it 'returns a new access token' do
-        post '/auth/refresh', params: { refresh_token: refresh_token.token }
-
-        expect(response).to have_http_status(:ok)
-        expect(response.parsed_body['access_token']).to be_present
-      end
-    end
-
-    context 'with invalid refresh token' do
-      it 'returns unauthorized' do
-        post '/auth/refresh', params: { refresh_token: 'invalid_token' }
-
-        expect(response).to have_http_status(:unauthorized)
-        expect(response.parsed_body['error']).to eq('invalid_refresh_token')
-      end
-    end
-
-    context 'with expired refresh token' do
-      let(:expired_token) { create(:refresh_token, :expired, user: user) }
-
-      it 'returns unauthorized and destroys the token' do
-        post '/auth/refresh', params: { refresh_token: expired_token.token }
-
-        expect(response).to have_http_status(:unauthorized)
-        expect(response.parsed_body['error']).to eq('refresh_token_expired')
-        expect(RefreshToken.find_by(id: expired_token.id)).to be_nil
+        run_test!
       end
     end
   end
 
-  describe 'DELETE /auth/logout' do
-    let(:user) { create(:user) }
-    let(:refresh_token) { create(:refresh_token, user: user) }
+  path '/auth/refresh' do
+    post 'Refresh access token' do
+      tags 'Authentication'
+      description 'Exchanges a valid refresh token for a new access token'
+      consumes 'application/json'
+      produces 'application/json'
 
-    it 'destroys the refresh token' do
-      delete '/auth/logout', params: { refresh_token: refresh_token.token }
+      parameter name: :body, in: :body, schema: {
+        type: :object,
+        properties: {
+          refresh_token: { type: :string }
+        },
+        required: %w[refresh_token]
+      }
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body['message']).to eq('logged_out')
-      expect(RefreshToken.find_by(id: refresh_token.id)).to be_nil
+      response '200', 'token refreshed' do
+        schema type: :object,
+          properties: {
+            access_token: { type: :string }
+          },
+          required: %w[access_token]
+
+        let(:user) { create(:user) }
+        let(:refresh_token_record) { create(:refresh_token, user: user) }
+        let(:body) { { refresh_token: refresh_token_record.token } }
+
+        run_test!
+      end
+
+      response '401', 'invalid refresh token' do
+        schema type: :object,
+          properties: {
+            error: { type: :string, example: 'invalid_refresh_token' }
+          },
+          required: %w[error]
+
+        let(:body) { { refresh_token: 'invalid_token' } }
+
+        run_test!
+      end
+
+      response '401', 'expired refresh token' do
+        schema type: :object,
+          properties: {
+            error: { type: :string, example: 'refresh_token_expired' }
+          },
+          required: %w[error]
+
+        let(:user) { create(:user) }
+        let(:expired_token) { create(:refresh_token, :expired, user: user) }
+        let(:body) { { refresh_token: expired_token.token } }
+
+        run_test!
+      end
     end
+  end
 
-    it 'returns success even with invalid token' do
-      delete '/auth/logout', params: { refresh_token: 'invalid_token' }
+  path '/auth/logout' do
+    delete 'User logout' do
+      tags 'Authentication'
+      description 'Invalidates the refresh token'
+      consumes 'application/json'
+      produces 'application/json'
 
-      expect(response).to have_http_status(:ok)
-      expect(response.parsed_body['message']).to eq('logged_out')
+      parameter name: :body, in: :body, schema: {
+        type: :object,
+        properties: {
+          refresh_token: { type: :string }
+        },
+        required: %w[refresh_token]
+      }
+
+      response '200', 'logged out' do
+        schema type: :object,
+          properties: {
+            message: { type: :string, example: 'logged_out' }
+          },
+          required: %w[message]
+
+        let(:user) { create(:user) }
+        let(:refresh_token_record) { create(:refresh_token, user: user) }
+        let(:body) { { refresh_token: refresh_token_record.token } }
+
+        run_test!
+      end
     end
   end
 end

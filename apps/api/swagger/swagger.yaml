@@ -1,0 +1,191 @@
+---
+openapi: 3.0.1
+info:
+  title: Shuriken Note API
+  version: v1
+  description: API documentation for Shuriken Note
+paths:
+  "/auth/login":
+    post:
+      summary: User login
+      tags:
+      - Authentication
+      description: Authenticates a user and returns access and refresh tokens
+      parameters: []
+      responses:
+        '200':
+          description: login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                    required:
+                    - id
+                    - email
+                    - created_at
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                required:
+                - user
+                - access_token
+                - refresh_token
+        '401':
+          description: invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: invalid_credentials
+                required:
+                - error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  example: password123
+              required:
+              - email
+              - password
+  "/auth/refresh":
+    post:
+      summary: Refresh access token
+      tags:
+      - Authentication
+      description: Exchanges a valid refresh token for a new access token
+      parameters: []
+      responses:
+        '200':
+          description: token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                required:
+                - access_token
+        '401':
+          description: expired refresh token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: refresh_token_expired
+                required:
+                - error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+              required:
+              - refresh_token
+  "/auth/logout":
+    delete:
+      summary: User logout
+      tags:
+      - Authentication
+      description: Invalidates the refresh token
+      parameters: []
+      responses:
+        '200':
+          description: logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: logged_out
+                required:
+                - message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+              required:
+              - refresh_token
+  "/me":
+    get:
+      summary: Get current user
+      tags:
+      - User
+      description: Returns the currently authenticated user information
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: current user returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  email:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+                required:
+                - id
+                - email
+                - created_at
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: unauthorized
+                required:
+                - error
+servers:
+- url: http://localhost:3000
+  description: Development server
+components:
+  securitySchemes:
+    bearer_auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
