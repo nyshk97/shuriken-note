@@ -155,9 +155,17 @@ Add the following secrets:
 ```yaml
 jwt:
   secret_key: "your-random-secret-key-here"
+
+admin:
+  email: "your@email.com"
+  password: "your-secure-password"
 ```
 
-<!-- TODO: Add complete list of required secrets as implementation progresses -->
+Then create the admin user:
+
+```bash
+docker compose exec api bin/rails db:seed
+```
 
 ---
 

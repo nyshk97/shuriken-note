@@ -16,7 +16,8 @@ RUN apt-get update -qq && \
     libyaml-dev \
     pkg-config \
     postgresql-client \
-    curl && \
+    curl \
+    vim && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Install bundler
