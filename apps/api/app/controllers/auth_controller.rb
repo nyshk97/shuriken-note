@@ -11,7 +11,7 @@ class AuthController < ApplicationController
         refresh_token: tokens[:refresh_token]
       }
     else
-      render json: { error: "invalid_credentials" }, status: :unauthorized
+      render json: { error: 'invalid_credentials' }, status: :unauthorized
     end
   end
 
@@ -20,13 +20,13 @@ class AuthController < ApplicationController
     refresh_token_record = RefreshToken.find_by(token: params[:refresh_token])
 
     if refresh_token_record.nil?
-      render json: { error: "invalid_refresh_token" }, status: :unauthorized
+      render json: { error: 'invalid_refresh_token' }, status: :unauthorized
       return
     end
 
     if refresh_token_record.expired?
       refresh_token_record.destroy
-      render json: { error: "refresh_token_expired" }, status: :unauthorized
+      render json: { error: 'refresh_token_expired' }, status: :unauthorized
       return
     end
 
@@ -43,7 +43,7 @@ class AuthController < ApplicationController
     refresh_token_record = RefreshToken.find_by(token: params[:refresh_token])
     refresh_token_record&.destroy
 
-    render json: { message: "logged_out" }
+    render json: { message: 'logged_out' }
   end
 
   private

@@ -18,9 +18,9 @@ module Authenticatable
     return nil unless token
 
     payload = JwtService.decode(token)
-    return nil unless payload["type"] == "access"
+    return nil unless payload['type'] == 'access'
 
-    User.find_by(id: payload["user_id"])
+    User.find_by(id: payload['user_id'])
   rescue JwtService::TokenExpiredError
     nil
   rescue JwtService::InvalidTokenError
@@ -28,13 +28,13 @@ module Authenticatable
   end
 
   def extract_token_from_header
-    header = request.headers["Authorization"]
-    return nil unless header&.start_with?("Bearer ")
+    header = request.headers['Authorization']
+    return nil unless header&.start_with?('Bearer ')
 
-    header.split(" ").last
+    header.split(' ').last
   end
 
   def render_unauthorized
-    render json: { error: "unauthorized" }, status: :unauthorized
+    render json: { error: 'unauthorized' }, status: :unauthorized
   end
 end

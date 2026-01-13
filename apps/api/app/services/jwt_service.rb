@@ -1,19 +1,19 @@
 class JwtService
-  ALGORITHM = "HS256"
+  ALGORITHM = 'HS256'
   ACCESS_TOKEN_EXPIRY = 15.minutes
   REFRESH_TOKEN_EXPIRY = 30.days
 
   class << self
     def encode_access_token(user_id:)
       encode(
-        payload: { user_id: user_id, type: "access" },
+        payload: { user_id: user_id, type: 'access' },
         expiry: ACCESS_TOKEN_EXPIRY
       )
     end
 
     def encode_refresh_token(user_id:)
       encode(
-        payload: { user_id: user_id, type: "refresh" },
+        payload: { user_id: user_id, type: 'refresh' },
         expiry: REFRESH_TOKEN_EXPIRY
       )
     end
@@ -38,7 +38,7 @@ class JwtService
 
     def secret_key
       Rails.application.credentials.dig(:jwt, :secret_key) ||
-        raise("JWT secret_key is not set in credentials")
+        raise('JWT secret_key is not set in credentials')
     end
   end
 
