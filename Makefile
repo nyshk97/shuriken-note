@@ -1,4 +1,4 @@
-.PHONY: bash bundle console migrate credentials rspec help
+.PHONY: bash bundle console migrate credentials rspec swagger help
 
 bash:
 	docker compose exec api bash
@@ -18,6 +18,9 @@ credentials:
 rspec:
 	docker compose exec -e RAILS_ENV=test api bundle exec rspec
 
+swagger:
+	docker compose exec -e RAILS_ENV=test api bundle exec rake rswag:specs:swaggerize
+
 help:
 	@echo "Usage: make [target]"
 	@echo ""
@@ -27,3 +30,4 @@ help:
 	@echo "  migrate       Run database migrations"
 	@echo "  credentials   Edit Rails credentials"
 	@echo "  rspec         Run RSpec tests"
+	@echo "  swagger       Generate OpenAPI documentation"
