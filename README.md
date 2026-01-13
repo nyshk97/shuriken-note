@@ -96,6 +96,7 @@ Major architectural decisions are recorded as ADRs.
 * [ADR 0005: Authorization Strategy](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0005-authorization-strategy.md)
 * [ADR 0006: Infrastructure and Deployment](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0006-infrastructure-deployment.md)
 * [ADR 0007: Error Handling Strategy](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0007-error-handling-strategy.md)
+* [ADR 0008: Secret Management](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0008-secret-management.md)
 
 ---
 
