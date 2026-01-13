@@ -96,6 +96,7 @@ Major architectural decisions are recorded as ADRs.
 * [ADR 0005: Authorization Strategy](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0005-authorization-strategy.md)
 * [ADR 0006: Infrastructure and Deployment](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0006-infrastructure-deployment.md)
 * [ADR 0007: Error Handling Strategy](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0007-error-handling-strategy.md)
+* [ADR 0008: Secret Management](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0008-secret-management.md)
 
 ---
 
@@ -120,7 +121,43 @@ Full specification is documented in:
 
 ## Local Development
 
-*This section will be documented later.*
+### Prerequisites
+
+- Docker & Docker Compose
+
+### Setup
+
+```bash
+git clone https://github.com/nyshk97/shuriken-note.git
+cd shuriken-note
+
+docker compose up -d
+docker compose exec api bin/rails db:setup
+```
+
+### Credentials Setup
+
+This project uses Rails credentials for secret management.
+See [ADR 0008: Secret Management](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0008-secret-management.md) for details.
+
+**For forked repositories:** You need to create your own credentials file.
+
+```bash
+# Remove the existing encrypted file (you can't decrypt it without the original master.key)
+rm apps/api/config/credentials.yml.enc
+
+# Create new credentials
+docker compose exec api bin/rails credentials:edit
+```
+
+Add the following secrets:
+
+```yaml
+jwt:
+  secret_key: "your-random-secret-key-here"
+```
+
+<!-- TODO: Add complete list of required secrets as implementation progresses -->
 
 ---
 
