@@ -1,11 +1,18 @@
-name: CI
+name: CI (API)
 
-# Run on both PR (pre-merge validation) and main push (post-merge safety net for squash merges)
 on:
   push:
     branches: [main]
+    paths:
+      - "apps/api/**"
+      - "docker/postgres/**"
+      - ".github/workflows/ci-api.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "apps/api/**"
+      - "docker/postgres/**"
+      - ".github/workflows/ci-api.yml"
 
 defaults:
   run:
@@ -13,6 +20,7 @@ defaults:
 
 jobs:
   lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -30,6 +38,7 @@ jobs:
         run: bin/rubocop
 
   security:
+    name: Security
     runs-on: ubuntu-latest
 
     steps:
@@ -50,6 +59,7 @@ jobs:
         run: bin/bundler-audit --update
 
   test:
+    name: Test
     runs-on: ubuntu-latest
 
     env:
