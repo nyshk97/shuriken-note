@@ -3,6 +3,7 @@ class ApplicationController < ActionController::API
 
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from ActionController::ParameterMissing, with: :render_bad_request
+  rescue_from ArgumentError, with: :render_argument_error
 
   private
 
@@ -32,6 +33,14 @@ class ApplicationController < ActionController::API
       code: 'invalid_request',
       message: exception.message,
       status: :bad_request
+    )
+  end
+
+  def render_argument_error(exception)
+    render_error(
+      code: 'invalid_parameter',
+      message: exception.message,
+      status: :unprocessable_entity
     )
   end
 
