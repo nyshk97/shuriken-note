@@ -5,6 +5,8 @@
 
 @theme inline {
   --font-sans: var(--font-noto-sans-jp);
+  --font-inter: var(--font-inter);
+  --font-playfair: var(--font-playfair);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -122,4 +124,59 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Login page styles */
+.login-page {
+  --login-bg: #0f0f0f;
+  --login-border: #2a2a2a;
+  --login-muted: #707070;
+  --login-placeholder: #3a3a3a;
+  background-color: var(--login-bg);
+}
+
+.login-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--login-border);
+  border-radius: 0;
+  padding: 0;
+  height: 2.5rem;
+  color: white;
+  font-weight: 300;
+  font-size: 0.875rem;
+  transition: border-color 0.3s;
+}
+
+.login-input::placeholder {
+  color: var(--login-placeholder);
+}
+
+.login-input:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.login-button {
+  height: 2.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: white;
+  font-weight: 300;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  border-radius: 0;
+  transition: all 0.5s;
+}
+
+.login-button:hover:not(:disabled) {
+  background: white;
+  color: black;
+}
+
+.login-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
