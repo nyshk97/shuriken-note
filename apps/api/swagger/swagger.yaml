@@ -167,10 +167,17 @@ paths:
       summary: List notes
       tags:
       - Notes
-      description: Returns all notes for the current user with optional sorting
+      description: Returns all notes for the current user with optional sorting and search
       security:
       - bearer_auth: []
       parameters:
+      - name: q
+        in: query
+        required: false
+        description: Search query to filter notes by title or body (case-insensitive)
+        example: meeting
+        schema:
+          type: string
       - name: sort
         in: query
         required: false

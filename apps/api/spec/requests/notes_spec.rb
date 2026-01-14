@@ -26,10 +26,13 @@ RSpec.describe 'Notes API', type: :request do
   path '/notes' do
     get 'List notes' do
       tags 'Notes'
-      description 'Returns all notes for the current user with optional sorting'
+      description 'Returns all notes for the current user with optional sorting and search'
       produces 'application/json'
       security [ bearer_auth: [] ]
 
+      parameter name: :q, in: :query, type: :string, required: false,
+                description: 'Search query to filter notes by title or body (case-insensitive)',
+                example: 'meeting'
       parameter name: :sort, in: :query, type: :string, required: false,
                 description: 'Sort field (created_at, updated_at). Prefix with - for descending. Default: -created_at',
                 example: '-created_at'

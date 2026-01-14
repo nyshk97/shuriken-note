@@ -15,28 +15,34 @@ jobs:
   rails:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: shuriken_note_api_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     env:
       RAILS_ENV: test
       DATABASE_URL: postgres://postgres:password@localhost:5432/shuriken_note_api_test
+      JWT_SECRET_KEY: test-secret-key-for-ci-only-do-not-use-in-production
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Build and start PostgreSQL with pg_bigm
+        run: |
+          docker build -t shuriken-postgres ./docker/postgres
+          docker run -d --name postgres \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=password \
+            -e POSTGRES_DB=shuriken_note_api_test \
+            -p 5432:5432 \
+            shuriken-postgres
+          # Wait for PostgreSQL to be ready
+          for i in {1..30}; do
+            if docker exec postgres pg_isready -U postgres; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 1
+          done
+        working-directory: ${{ github.workspace }}
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -60,4 +66,5 @@ jobs:
       - name: Run Bundler Audit
         run: bin/bundler-audit --update
 
-      # TODO: Add RSpec step after rspec-rails is installed
+      - name: Run RSpec
+        run: bundle exec rspec
