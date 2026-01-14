@@ -12,7 +12,44 @@ defaults:
     working-directory: apps/api
 
 jobs:
-  rails:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version-file: apps/api/.ruby-version
+          bundler-cache: true
+          working-directory: apps/api
+
+      - name: Run Rubocop
+        run: bin/rubocop
+
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version-file: apps/api/.ruby-version
+          bundler-cache: true
+          working-directory: apps/api
+
+      - name: Run Brakeman
+        run: bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
+
+      - name: Run Bundler Audit
+        run: bin/bundler-audit --update
+
+  test:
     runs-on: ubuntu-latest
 
     env:
@@ -56,15 +93,6 @@ jobs:
 
       - name: Boot check
         run: bin/rails runner "puts 'Rails boot OK'"
-
-      - name: Run Rubocop
-        run: bin/rubocop
-
-      - name: Run Brakeman
-        run: bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
-
-      - name: Run Bundler Audit
-        run: bin/bundler-audit --update
 
       - name: Run RSpec
         run: bundle exec rspec
