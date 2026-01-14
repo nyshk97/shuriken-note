@@ -35,6 +35,10 @@ module Authenticatable
   end
 
   def render_unauthorized
-    render json: { error: 'unauthorized' }, status: :unauthorized
+    render_error(
+      code: 'unauthorized',
+      message: 'Authentication required',
+      status: :unauthorized
+    )
   end
 end

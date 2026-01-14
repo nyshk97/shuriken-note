@@ -74,23 +74,4 @@ class NotesController < ApplicationController
 
     { field => direction }
   end
-
-  def render_validation_error(record)
-    details = record.errors.map do |error|
-      {
-        field: error.attribute.to_s,
-        code: error.type.to_s,
-        message: error.full_message
-      }
-    end
-
-    render json: {
-      error: {
-        code: 'validation_failed',
-        message: 'Validation failed',
-        details: details
-      },
-      request_id: request.request_id
-    }, status: :unprocessable_entity
-  end
 end

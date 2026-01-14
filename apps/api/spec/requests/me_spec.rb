@@ -26,11 +26,7 @@ RSpec.describe 'Current User API', type: :request do
       end
 
       response '401', 'unauthorized' do
-        schema type: :object,
-          properties: {
-            error: { type: :string, example: 'unauthorized' }
-          },
-          required: %w[error]
+        schema '$ref' => '#/components/schemas/error_response'
 
         let(:Authorization) { 'Bearer invalid_token' }
 

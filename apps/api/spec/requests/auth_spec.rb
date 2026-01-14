@@ -43,11 +43,7 @@ RSpec.describe 'Authentication API', type: :request do
       end
 
       response '401', 'invalid credentials' do
-        schema type: :object,
-          properties: {
-            error: { type: :string, example: 'invalid_credentials' }
-          },
-          required: %w[error]
+        schema '$ref' => '#/components/schemas/error_response'
 
         let(:credentials) { { email: 'wrong@example.com', password: 'wrong' } }
 
@@ -86,11 +82,7 @@ RSpec.describe 'Authentication API', type: :request do
       end
 
       response '401', 'invalid refresh token' do
-        schema type: :object,
-          properties: {
-            error: { type: :string, example: 'invalid_refresh_token' }
-          },
-          required: %w[error]
+        schema '$ref' => '#/components/schemas/error_response'
 
         let(:body) { { refresh_token: 'invalid_token' } }
 
@@ -98,11 +90,7 @@ RSpec.describe 'Authentication API', type: :request do
       end
 
       response '401', 'expired refresh token' do
-        schema type: :object,
-          properties: {
-            error: { type: :string, example: 'refresh_token_expired' }
-          },
-          required: %w[error]
+        schema '$ref' => '#/components/schemas/error_response'
 
         let(:user) { create(:user) }
         let(:expired_token) { create(:refresh_token, :expired, user: user) }
