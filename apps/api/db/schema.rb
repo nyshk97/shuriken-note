@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_13_090235) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_14_004620) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -22,10 +22,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_090235) do
     t.string "status", default: "personal", null: false
     t.string "title", default: "", null: false
     t.datetime "updated_at", null: false
-    t.uuid "user_id", null: false
-    t.index ["slug"], name: "index_notes_on_slug"
-    t.index ["status"], name: "index_notes_on_status"
-    t.index ["user_id"], name: "index_notes_on_user_id"
+    t.bigint "user_id", null: false
+    t.index [ "slug" ], name: "index_notes_on_slug"
+    t.index [ "status" ], name: "index_notes_on_status"
+    t.index [ "user_id" ], name: "index_notes_on_user_id"
   end
 
   create_table "refresh_tokens", force: :cascade do |t|
@@ -34,8 +34,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_090235) do
     t.string "token", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["token"], name: "index_refresh_tokens_on_token", unique: true
-    t.index ["user_id"], name: "index_refresh_tokens_on_user_id"
+    t.index [ "token" ], name: "index_refresh_tokens_on_token", unique: true
+    t.index [ "user_id" ], name: "index_refresh_tokens_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -43,8 +43,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_13_090235) do
     t.string "email", null: false
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_users_on_email", unique: true
+    t.index [ "email" ], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "notes", "users"
   add_foreign_key "refresh_tokens", "users"
 end
