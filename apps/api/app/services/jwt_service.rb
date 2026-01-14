@@ -36,9 +36,12 @@ class JwtService
       JWT.encode(payload, secret_key, ALGORITHM)
     end
 
+    # Environment variable fallback allows CI to run without master.key
+    # See: docs/adr/0008-secret-management.md
     def secret_key
-      Rails.application.credentials.dig(:jwt, :secret_key) ||
-        raise('JWT secret_key is not set in credentials')
+      ENV['JWT_SECRET_KEY'] ||
+        Rails.application.credentials.dig(:jwt, :secret_key) ||
+        raise('JWT secret_key is not set in credentials or JWT_SECRET_KEY environment variable')
     end
   end
 

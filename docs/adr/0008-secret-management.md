@@ -110,8 +110,9 @@ The following approaches were considered:
 - Requires careful handling of `master.key` to prevent loss or leakage
   - If lost, credentials must be recreated from scratch
   - If leaked, all secrets must be rotated
-- CI/CD environments require a secure mechanism to pass `RAILS_MASTER_KEY`
-  - For GitHub Actions, register in Repository Secrets and reference via `${{ secrets.RAILS_MASTER_KEY }}`
+- CI/CD environments require secrets to be available without `master.key`
+  - To avoid exposing production credentials, CI uses environment variable fallbacks (e.g., `JWT_SECRET_KEY`) with test-only values
+  - This keeps production secrets secure while allowing CI to run independently
 
 ### Accepted Trade-offs
 
@@ -160,7 +161,10 @@ jwt:
 
 ```ruby
 # Accessing secrets in application code
-Rails.application.credentials.dig(:jwt, :secret_key)
+# Environment variable fallback allows CI to run without master.key
+ENV['JWT_SECRET_KEY'] ||
+  Rails.application.credentials.dig(:jwt, :secret_key) ||
+  raise('JWT secret_key is not set')
 ```
 
 ### For Forked Repository Users
