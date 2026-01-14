@@ -14,6 +14,15 @@ class Note < ApplicationRecord
 
   before_validation :generate_slug, on: :create
 
+  # Full-text search using pg_bigm
+  # Searches title and body with ILIKE for case-insensitive matching
+  scope :search, ->(query) {
+    return all if query.blank?
+
+    sanitized = "%#{sanitize_sql_like(query)}%"
+    where('title ILIKE :q OR body ILIKE :q', q: sanitized)
+  }
+
   private
 
   def generate_slug

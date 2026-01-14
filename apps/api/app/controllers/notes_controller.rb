@@ -8,7 +8,7 @@ class NotesController < ApplicationController
 
   # GET /notes
   def index
-    notes = current_user.notes.order(sort_order)
+    notes = current_user.notes.search(params[:q]).order(sort_order)
     render json: { notes: notes.map { |note| note_response(note) } }
   end
 
