@@ -12,7 +12,35 @@ defaults:
     working-directory: apps/api
 
 jobs:
-  lint:
+  # Web jobs
+  lint-web:
+    name: Lint (Web)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: apps/web/.nvmrc
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  # API jobs
+  lint-api:
+    name: Lint (API)
     runs-on: ubuntu-latest
 
     steps:
