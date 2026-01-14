@@ -14,4 +14,7 @@ Rails.application.routes.draw do
 
   # Current user
   get 'me', to: 'me#show'
+
+  # Notes
+  resources :notes, only: %i[index show create update destroy]
 end
