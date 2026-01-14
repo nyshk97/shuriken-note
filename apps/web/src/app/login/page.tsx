@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { ApiClientError } from "@/lib/api/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -31,7 +32,9 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push("/");
+      // Redirect to the original page or home
+      const redirect = searchParams.get("redirect") || "/";
+      router.push(redirect);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(err.message);
