@@ -47,13 +47,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: invalid_credentials
-                required:
-                - error
+                "$ref": "#/components/schemas/error_response"
       requestBody:
         content:
           application/json:
@@ -94,13 +88,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: refresh_token_expired
-                required:
-                - error
+                "$ref": "#/components/schemas/error_response"
       requestBody:
         content:
           application/json:
@@ -173,13 +161,333 @@ paths:
           content:
             application/json:
               schema:
+                "$ref": "#/components/schemas/error_response"
+  "/notes":
+    get:
+      summary: List notes
+      tags:
+      - Notes
+      description: Returns all notes for the current user with optional sorting
+      security:
+      - bearer_auth: []
+      parameters:
+      - name: sort
+        in: query
+        required: false
+        description: 'Sort field (created_at, updated_at). Prefix with - for descending.
+          Default: -created_at'
+        example: "-created_at"
+        schema:
+          type: string
+      responses:
+        '200':
+          description: notes sorted by created_at ascending
+          content:
+            application/json:
+              schema:
                 type: object
                 properties:
-                  error:
-                    type: string
-                    example: unauthorized
+                  notes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        title:
+                          type: string
+                          nullable: true
+                        body:
+                          type: string
+                          nullable: true
+                        slug:
+                          type: string
+                        status:
+                          type: string
+                          enum:
+                          - personal
+                          - published
+                          - archived
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+                      required:
+                      - id
+                      - slug
+                      - status
+                      - created_at
+                      - updated_at
                 required:
-                - error
+                - notes
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+    post:
+      summary: Create a note
+      tags:
+      - Notes
+      description: Creates a new note for the current user
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '201':
+          description: note created without title (generates random slug)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  note:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      title:
+                        type: string
+                        nullable: true
+                      body:
+                        type: string
+                        nullable: true
+                      slug:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                        - personal
+                        - published
+                        - archived
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                    required:
+                    - id
+                    - slug
+                    - status
+                    - created_at
+                    - updated_at
+                required:
+                - note
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: validation error - invalid status
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      example: My Note Title
+                    body:
+                      type: string
+                      example: Note content here...
+                    status:
+                      type: string
+                      enum:
+                      - personal
+                      - published
+                      - archived
+                      example: personal
+              required:
+              - note
+  "/notes/{id}":
+    parameters:
+    - name: id
+      in: path
+      format: uuid
+      description: Note ID
+      required: true
+      schema:
+        type: string
+    get:
+      summary: Get a note
+      tags:
+      - Notes
+      description: Returns a specific note by ID
+      security:
+      - bearer_auth: []
+      responses:
+        '200':
+          description: note returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  note:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      title:
+                        type: string
+                        nullable: true
+                      body:
+                        type: string
+                        nullable: true
+                      slug:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                        - personal
+                        - published
+                        - archived
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                    required:
+                    - id
+                    - slug
+                    - status
+                    - created_at
+                    - updated_at
+                required:
+                - note
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: note belongs to another user
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+    patch:
+      summary: Update a note
+      tags:
+      - Notes
+      description: Updates an existing note
+      security:
+      - bearer_auth: []
+      parameters: []
+      responses:
+        '200':
+          description: note updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  note:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      title:
+                        type: string
+                        nullable: true
+                      body:
+                        type: string
+                        nullable: true
+                      slug:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                        - personal
+                        - published
+                        - archived
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                    required:
+                    - id
+                    - slug
+                    - status
+                    - created_at
+                    - updated_at
+                required:
+                - note
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '404':
+          description: note not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+        '422':
+          description: validation error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    body:
+                      type: string
+                    status:
+                      type: string
+                      enum:
+                      - personal
+                      - published
+                      - archived
+              required:
+              - note
+    delete:
+      summary: Delete a note
+      tags:
+      - Notes
+      description: Deletes a note
+      security:
+      - bearer_auth: []
+      responses:
+        '204':
+          description: note deleted
+        '401':
+          description: unauthorized
+        '404':
+          description: note not found
 servers:
 - url: http://localhost:3000
   description: Development server
@@ -189,3 +497,33 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    error_response:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  code:
+                    type: string
+                  message:
+                    type: string
+          required:
+          - code
+          - message
+        request_id:
+          type: string
+      required:
+      - error
+      - request_id

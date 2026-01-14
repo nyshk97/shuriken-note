@@ -33,6 +33,34 @@ RSpec.configure do |config|
             scheme: :bearer,
             bearerFormat: 'JWT'
           }
+        },
+        schemas: {
+          error_response: {
+            type: :object,
+            properties: {
+              error: {
+                type: :object,
+                properties: {
+                  code: { type: :string },
+                  message: { type: :string },
+                  details: {
+                    type: :array,
+                    items: {
+                      type: :object,
+                      properties: {
+                        field: { type: :string },
+                        code: { type: :string },
+                        message: { type: :string }
+                      }
+                    }
+                  }
+                },
+                required: %w[code message]
+              },
+              request_id: { type: :string }
+            },
+            required: %w[error request_id]
+          }
         }
       }
     }
