@@ -1,46 +1,26 @@
-name: CI
+name: CI (API)
 
-# Run on both PR (pre-merge validation) and main push (post-merge safety net for squash merges)
 on:
   push:
     branches: [main]
+    paths:
+      - "apps/api/**"
+      - "docker/postgres/**"
+      - ".github/workflows/ci-api.yml"
   pull_request:
     branches: [main]
+    paths:
+      - "apps/api/**"
+      - "docker/postgres/**"
+      - ".github/workflows/ci-api.yml"
 
 defaults:
   run:
     working-directory: apps/api
 
 jobs:
-  # Web jobs
-  lint-web:
-    name: Lint (Web)
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: apps/web
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: apps/web/.nvmrc
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npm run lint
-
-  # API jobs
-  lint-api:
-    name: Lint (API)
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -58,6 +38,7 @@ jobs:
         run: bin/rubocop
 
   security:
+    name: Security
     runs-on: ubuntu-latest
 
     steps:
@@ -78,6 +59,7 @@ jobs:
         run: bin/bundler-audit --update
 
   test:
+    name: Test
     runs-on: ubuntu-latest
 
     env:
