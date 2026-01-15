@@ -188,6 +188,7 @@
   --workspace-border: #2f2f2f;
   --workspace-text-primary: #d4d4d4;
   --workspace-text-secondary: rgba(255, 255, 255, 0.445);
+  --workspace-text-tertiary: rgba(255, 255, 255, 0.25);
   --workspace-hover: rgba(255, 255, 255, 0.055);
   --workspace-active: rgba(255, 255, 255, 0.09);
   --workspace-accent: #2383e2;
