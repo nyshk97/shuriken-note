@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getNote, updateNote, type Note } from "@/lib/api";
 import { VditorEditor } from "@/components/editor";
-import { useAutoSave, type AutoSaveStatus } from "@/hooks/use-auto-save";
+import { useAutoSave } from "@/hooks/use-auto-save";
+import { useSaveStatus } from "@/contexts/save-status-context";
 
 export default function NoteEditorPage() {
   const params = useParams();
@@ -60,6 +61,7 @@ export default function NoteEditorPage() {
 
 function NoteEditor({ note }: { note: Note }) {
   const queryClient = useQueryClient();
+  const { setStatus } = useSaveStatus();
 
   // Initialize with note values - this runs once per mount
   const [title, setTitle] = useState(note.title);
@@ -84,6 +86,16 @@ function NoteEditor({ note }: { note: Note }) {
     },
     delay: 1000,
   });
+
+  // Sync status to context for header display
+  useEffect(() => {
+    setStatus(status);
+  }, [status, setStatus]);
+
+  // Reset status when unmounting
+  useEffect(() => {
+    return () => setStatus("idle");
+  }, [setStatus]);
 
   // Keyboard shortcut: Cmd+S / Ctrl+S to flush save
   useEffect(() => {
@@ -114,11 +126,6 @@ function NoteEditor({ note }: { note: Note }) {
 
   return (
     <div className="max-w-[900px] mx-auto px-12 sm:px-24 pt-12 h-full flex flex-col">
-      {/* Header with save status */}
-      <div className="mb-6">
-        <SaveStatusIndicator status={status} />
-      </div>
-
       {/* Title input */}
       <input
         type="text"
@@ -146,41 +153,4 @@ function NoteEditor({ note }: { note: Note }) {
       )}
     </div>
   );
-}
-
-/** Save status indicator component */
-function SaveStatusIndicator({ status }: { status: AutoSaveStatus }) {
-  switch (status) {
-    case "saving":
-      return (
-        <div className="flex items-center gap-2 text-sm text-[var(--workspace-text-secondary)]">
-          <div className="h-3 w-3 animate-spin rounded-full border border-[var(--workspace-text-secondary)] border-t-transparent" />
-          <span>Saving...</span>
-        </div>
-      );
-    case "saved":
-      return (
-        <div className="text-sm text-[var(--workspace-text-secondary)]">
-          Saved
-        </div>
-      );
-    case "error":
-      return (
-        <div className="text-sm text-red-500">
-          Save failed
-        </div>
-      );
-    case "pending":
-      return (
-        <div className="text-sm text-[var(--workspace-text-tertiary)]">
-          Editing...
-        </div>
-      );
-    default:
-      return (
-        <div className="text-sm text-[var(--workspace-text-secondary)]">
-          Saved
-        </div>
-      );
-  }
 }

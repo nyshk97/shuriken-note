@@ -31,7 +31,11 @@ type NoteSection = {
   notes: Note[];
 };
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+}
+
+export function Sidebar({ isOpen = true }: SidebarProps) {
   const { user } = useAuth();
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -103,7 +107,10 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-[240px] flex-shrink-0 flex flex-col bg-[var(--workspace-sidebar)] border-r border-[var(--workspace-border)] h-full transition-colors duration-200 group/sidebar">
+    <aside
+      className={`flex-shrink-0 flex flex-col bg-[var(--workspace-sidebar)] border-r border-[var(--workspace-border)] h-full transition-all duration-200 group/sidebar overflow-hidden ${isOpen ? "w-[240px]" : "w-0 border-r-0"
+        }`}
+    >
       {/* Workspace header */}
       <div className="px-3 py-3 h-[45px] flex items-center justify-between cursor-pointer hover:bg-[var(--workspace-hover)] transition-colors m-1 rounded">
         <div className="flex items-center gap-2 overflow-hidden">
@@ -316,8 +323,8 @@ function NoteItemContent({
       <Link
         href={`/notes/${note.id}`}
         className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${isDragging
-            ? "cursor-grabbing"
-            : "cursor-pointer"
+          ? "cursor-grabbing"
+          : "cursor-pointer"
           } ${isActive
             ? "bg-[var(--workspace-active)] text-[var(--workspace-text-primary)]"
             : "text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)]"
