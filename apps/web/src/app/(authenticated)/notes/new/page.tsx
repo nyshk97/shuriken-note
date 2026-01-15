@@ -60,7 +60,7 @@ export default function NewNotePage() {
     createTimerRef.current = setTimeout(() => {
       setIsCreating(true);
       createMutation.mutate();
-    }, 1000);
+    }, 500);
 
     return () => {
       if (createTimerRef.current) {

@@ -82,7 +82,7 @@ function NoteEditor({ note }: { note: Note }) {
       queryClient.setQueryData(["note", note.id], updatedNote);
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
-    delay: 3000,
+    delay: 1000,
   });
 
   // Keyboard shortcut: Cmd+S / Ctrl+S to flush save
