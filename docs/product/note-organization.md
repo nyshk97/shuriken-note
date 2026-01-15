@@ -22,11 +22,23 @@
 - Maximum hierarchy depth is limited to two levels (parent → child; no grandchildren).
 - The parent-child relationship exists to provide semantic grouping and to support permission and archive state inheritance.
 
-## Public Note URL Policy
+## URL Policies
 
-Public notes are exposed via URLs composed of a human-readable slug and a stable UUID.
+### Internal Editor URL
 
-This separation ensures readable URLs for humans while keeping internal references stable even if note titles change.
+The note editor is accessed via `/notes/{uuid}`.
+
+Using UUID ensures:
+
+- URLs remain stable even if note titles change
+- No exposure of sequential database IDs
+- Consistent identifier usage across the application
+
+### Public Note URL
+
+Public notes are exposed via `/p/{slug}-{uuid}`.
+
+This format ensures readable URLs for humans while keeping references stable even if note titles change.
 
 ## Note Identifier Policy
 
