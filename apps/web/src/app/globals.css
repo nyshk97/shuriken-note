@@ -295,3 +295,21 @@
 .note-editor pre.vditor-reset {
   padding: 8px 4px !important;
 }
+
+/* Vditor: Notion-like table styles */
+.vditor-ir table,
+.vditor table {
+  border-collapse: collapse;
+  width: auto;
+  margin: 0.5em 0;
+}
+
+.vditor-ir table th,
+.vditor-ir table td,
+.vditor table th,
+.vditor table td {
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  padding: 6px 9px !important;
+  background: #252525 !important;
+  font-weight: normal !important;
+}
