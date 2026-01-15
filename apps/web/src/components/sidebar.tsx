@@ -1,12 +1,46 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { useCreateNote } from "@/hooks/use-create-note";
+import { getNotes, type Note } from "@/lib/api";
 
-// Note: This is a placeholder sidebar component.
-// Full sidebar functionality (note list, search, etc.) will be implemented in a future issue.
+type NoteSection = {
+  key: Note["status"];
+  label: string;
+  notes: Note[];
+};
 
 export function Sidebar() {
   const { user } = useAuth();
+  const pathname = usePathname();
+  const createNoteMutation = useCreateNote();
+
+  const { data: notes = [], isLoading } = useQuery({
+    queryKey: ["notes"],
+    queryFn: () => getNotes({ sort: "-updated_at" }),
+  });
+
+  // Group notes by status
+  const sections: NoteSection[] = [
+    {
+      key: "personal",
+      label: "Private",
+      notes: notes.filter((n) => n.status === "personal"),
+    },
+    {
+      key: "published",
+      label: "Public",
+      notes: notes.filter((n) => n.status === "published"),
+    },
+    {
+      key: "archived",
+      label: "Archived",
+      notes: notes.filter((n) => n.status === "archived"),
+    },
+  ];
 
   return (
     <aside className="w-[240px] flex-shrink-0 flex flex-col bg-[var(--workspace-sidebar)] border-r border-[var(--workspace-border)] h-full transition-colors duration-200 group/sidebar">
@@ -38,34 +72,83 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Notes section - placeholder */}
+      {/* Notes sections */}
       <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-4 workspace-scrollbar">
-        <div>
-          <div className="px-3 py-1 text-xs font-semibold text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer flex items-center justify-between group/header">
-            <span>Private</span>
+        {isLoading ? (
+          <div className="px-3 py-2 text-sm text-[var(--workspace-text-secondary)]">
+            Loading...
           </div>
-          <div className="mt-0.5 space-y-0.5">
-            {/* Placeholder items - will be replaced with actual notes */}
-            <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer">
-              <span className="material-symbols-outlined icon-sm">
-                description
-              </span>
-              <span className="truncate">No notes yet</span>
-            </div>
-          </div>
-        </div>
+        ) : (
+          sections.map((section) => (
+            <NoteSection
+              key={section.key}
+              label={section.label}
+              notes={section.notes}
+              currentPath={pathname}
+            />
+          ))
+        )}
       </div>
 
       {/* Footer - New page button */}
       <div className="p-2 border-t border-[var(--workspace-border)] mt-auto">
         <button
           type="button"
-          className="w-full flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer transition-colors"
+          onClick={() => createNoteMutation.mutate()}
+          disabled={createNoteMutation.isPending}
+          className="w-full flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined icon-sm">add</span>
-          <span>New page</span>
+          <span>{createNoteMutation.isPending ? "Creating..." : "New page"}</span>
         </button>
       </div>
     </aside>
+  );
+}
+
+function NoteSection({
+  label,
+  notes,
+  currentPath,
+}: {
+  label: string;
+  notes: Note[];
+  currentPath: string;
+}) {
+  return (
+    <div>
+      <div className="px-3 py-1 text-xs font-semibold text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer flex items-center justify-between group/header">
+        <span>{label}</span>
+      </div>
+      <div className="mt-0.5 space-y-0.5">
+        {notes.length === 0 ? (
+          <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-tertiary)] italic">
+            <span className="material-symbols-outlined icon-sm">
+              description
+            </span>
+            <span className="truncate">No notes</span>
+          </div>
+        ) : (
+          notes.map((note) => {
+            const isActive = currentPath === `/notes/${note.id}`;
+            return (
+              <Link
+                key={note.id}
+                href={`/notes/${note.id}`}
+                className={`flex items-center gap-2 px-3 py-1 text-sm rounded cursor-pointer transition-colors ${isActive
+                    ? "bg-[var(--workspace-active)] text-[var(--workspace-text-primary)]"
+                    : "text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)]"
+                  }`}
+              >
+                <span className="material-symbols-outlined icon-sm">
+                  description
+                </span>
+                <span className="truncate">{note.title || "Untitled"}</span>
+              </Link>
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 }
