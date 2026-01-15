@@ -4,12 +4,25 @@ import type { NextRequest } from "next/server";
 // Routes that require authentication
 const protectedRoutes = ["/"];
 
+// Routes that are public (no authentication required)
+const publicRoutes = ["/p"];
+
 // Routes that should redirect to home if already authenticated
 const authRoutes = ["/login"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasRefreshToken = request.cookies.get("has_refresh_token")?.value === "1";
+
+  // Check if the route is public (explicitly allowed without auth)
+  const isPublicRoute = publicRoutes.some(
+    (route) => pathname === route || pathname.startsWith(route + "/")
+  );
+
+  // Public routes bypass authentication check
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
 
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some(
