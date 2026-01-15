@@ -3,6 +3,8 @@
 import { useEffect, useRef, useCallback } from "react";
 import type Vditor from "vditor";
 import "vditor/dist/index.css";
+import { useFloatingToolbar } from "./use-floating-toolbar";
+import { FloatingToolbar, type ToolbarAction } from "./floating-toolbar";
 
 // URL detection regex
 const URL_REGEX = /^https?:\/\/[^\s]+$/;
@@ -38,7 +40,14 @@ export function VditorEditor({
 }: VditorEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Vditor | null>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
   const initialValueRef = useRef(value);
+
+  // Floating toolbar state
+  const { isOpen, position, close } = useFloatingToolbar({
+    containerRef,
+    toolbarRef,
+  });
 
   const handleInput = useCallback(
     (newValue: string) => {
@@ -90,27 +99,9 @@ export function VditorEditor({
         theme: "dark",
         icon: "ant",
         lang: "en_US",
-        toolbar: [
-          "headings",
-          "bold",
-          "strike",
-          "|",
-          "list",
-          "ordered-list",
-          "check",
-          "|",
-          "quote",
-          "code",
-          "inline-code",
-          "|",
-          "link",
-          "upload",
-          "|",
-          "undo",
-          "redo",
-        ],
+        toolbar: [],
         toolbarConfig: {
-          pin: true,
+          hide: true,
         },
         cache: {
           enable: false,
@@ -162,5 +153,66 @@ export function VditorEditor({
     }
   }, [value]);
 
-  return <div ref={containerRef} className={className} lang="ja" />;
+  // Handle toolbar actions
+  const handleToolbarAction = useCallback((action: ToolbarAction) => {
+    if (!editorRef.current) return;
+
+    switch (action) {
+      case "strikethrough": {
+        const selection = editorRef.current.getSelection();
+        if (selection) {
+          editorRef.current.updateValue(`~~${selection}~~`);
+        } else {
+          editorRef.current.insertValue("~~~~");
+        }
+        break;
+      }
+      case "checkbox": {
+        editorRef.current.insertValue("\n- [ ] ");
+        break;
+      }
+      case "table": {
+        const table = `
+| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+|          |          |          |
+|          |          |          |
+`;
+        editorRef.current.insertValue(table);
+        break;
+      }
+      case "link": {
+        const selection = editorRef.current.getSelection();
+        if (selection) {
+          editorRef.current.updateValue(`[${selection}](url)`);
+        } else {
+          editorRef.current.insertValue("[](url)");
+        }
+        break;
+      }
+      case "upload": {
+        // TODO: Implement file upload
+        // For now, just insert a placeholder
+        editorRef.current.insertValue("![](image-url)");
+        break;
+      }
+    }
+
+    // Focus back to editor
+    editorRef.current.focus();
+  }, []);
+
+  return (
+    <div className="relative">
+      <div ref={containerRef} className={className} lang="ja" />
+      {isOpen && (
+        <FloatingToolbar
+          ref={toolbarRef}
+          position={position}
+          onAction={handleToolbarAction}
+          onClose={close}
+        />
+      )}
+    </div>
+  );
 }

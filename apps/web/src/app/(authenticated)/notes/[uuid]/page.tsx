@@ -145,6 +145,18 @@ function NoteEditor({ note }: { note: Note }) {
         />
       </div>
 
+      {/* Shortcut hint */}
+      <div className="py-2 text-xs text-[var(--workspace-text-tertiary)]">
+        <kbd className="px-1.5 py-0.5 rounded bg-[var(--workspace-hover)] text-[var(--workspace-text-secondary)]">
+          {typeof navigator !== "undefined" && navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}
+        </kbd>
+        <span className="mx-1">+</span>
+        <kbd className="px-1.5 py-0.5 rounded bg-[var(--workspace-hover)] text-[var(--workspace-text-secondary)]">
+          /
+        </kbd>
+        <span className="ml-2">for formatting toolbar</span>
+      </div>
+
       {/* Error display */}
       {saveError && (
         <div className="mt-4 p-3 rounded-md bg-red-500/10 text-red-500 text-sm">
