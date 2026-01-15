@@ -50,7 +50,7 @@ class NotesController < ApplicationController
   private
 
   def note_params
-    params.require(:note).permit(:title, :body, :status)
+    params.fetch(:note, {}).permit(:title, :body, :status)
   end
 
   def note_response(note)

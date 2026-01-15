@@ -1,9 +1,11 @@
 "use client";
 
 import { useAuth } from "@/hooks/use-auth";
+import { useCreateNote } from "@/hooks/use-create-note";
 
 export default function Home() {
   const { user } = useAuth();
+  const createNoteMutation = useCreateNote();
 
   return (
     <div className="max-w-[900px] mx-auto px-12 sm:px-24 pt-24 pb-32">
@@ -21,7 +23,9 @@ export default function Home() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <button
           type="button"
-          className="flex items-center gap-3 p-4 rounded-lg border border-[var(--workspace-border)] hover:bg-[var(--workspace-hover)] transition-colors text-left group"
+          onClick={() => createNoteMutation.mutate()}
+          disabled={createNoteMutation.isPending}
+          className="flex items-center gap-3 p-4 rounded-lg border border-[var(--workspace-border)] hover:bg-[var(--workspace-hover)] transition-colors text-left group disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="w-10 h-10 rounded-lg bg-[var(--workspace-hover)] flex items-center justify-center group-hover:bg-[var(--workspace-active)] transition-colors">
             <span className="material-symbols-outlined text-[var(--workspace-text-secondary)]">
@@ -30,7 +34,7 @@ export default function Home() {
           </div>
           <div>
             <p className="font-medium text-[var(--workspace-text-primary)]">
-              New note
+              {createNoteMutation.isPending ? "Creating..." : "New note"}
             </p>
             <p className="text-sm text-[var(--workspace-text-secondary)]">
               Create a blank note
