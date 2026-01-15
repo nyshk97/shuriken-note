@@ -261,7 +261,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] hover:text-[var(--workspace-text-primary)] transition-colors disabled:opacity-50"
                   >
                     <LogOut size={16} />
-                    <span>{isLoggingOut ? "ログアウト中..." : "ログアウト"}</span>
+                    <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                   </button>
                 </div>
               </div>
