@@ -90,10 +90,12 @@ export function Sidebar() {
           sections.map((section) => (
             <NoteSectionComponent
               key={section.key}
+              sectionKey={section.key}
               label={section.label}
               notes={section.notes}
               currentPath={pathname}
               defaultExpanded={section.key !== "archived"}
+              showNewButton={section.key !== "archived"}
             />
           ))
         )}
@@ -103,7 +105,7 @@ export function Sidebar() {
       <div className="p-2 border-t border-[var(--workspace-border)] mt-auto">
         <button
           type="button"
-          onClick={() => createNoteMutation.mutate()}
+          onClick={() => createNoteMutation.mutate("personal")}
           disabled={createNoteMutation.isPending}
           className="w-full flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -116,19 +118,29 @@ export function Sidebar() {
 }
 
 function NoteSectionComponent({
+  sectionKey,
   label,
   notes,
   currentPath,
   defaultExpanded = true,
+  showNewButton = false,
 }: {
+  sectionKey: Note["status"];
   label: string;
   notes: Note[];
   currentPath: string;
   defaultExpanded?: boolean;
+  showNewButton?: boolean;
 }) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const createNoteMutation = useCreateNote();
 
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
+
+  // Map section key to note status for creation
+  const getCreateStatus = (): Note["status"] => {
+    return sectionKey === "published" ? "published" : "personal";
+  };
 
   return (
     <div>
@@ -147,21 +159,23 @@ function NoteSectionComponent({
       </button>
       {isExpanded && (
         <div className="mt-0.5 space-y-0.5">
-          {notes.length === 0 ? (
-            <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-tertiary)] italic ml-4">
-              <span className="material-symbols-outlined icon-sm">
-                description
-              </span>
-              <span className="truncate">No notes</span>
-            </div>
-          ) : (
-            notes.map((note) => (
-              <NoteItem
-                key={note.id}
-                note={note}
-                isActive={currentPath === `/notes/${note.id}`}
-              />
-            ))
+          {notes.map((note) => (
+            <NoteItem
+              key={note.id}
+              note={note}
+              isActive={currentPath === `/notes/${note.id}`}
+            />
+          ))}
+          {showNewButton && (
+            <button
+              type="button"
+              onClick={() => createNoteMutation.mutate(getCreateStatus())}
+              disabled={createNoteMutation.isPending}
+              className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-tertiary)] hover:bg-[var(--workspace-hover)] hover:text-[var(--workspace-text-secondary)] rounded cursor-pointer transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-outlined icon-sm">add</span>
+              <span>{createNoteMutation.isPending ? "Creating..." : "New page"}</span>
+            </button>
           )}
         </div>
       )}
