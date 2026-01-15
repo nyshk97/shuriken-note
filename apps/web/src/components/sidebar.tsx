@@ -16,9 +16,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import {
-  ChevronDown,
   ChevronRight,
-  SquarePen,
   Search,
   Settings,
   Globe,
@@ -125,16 +123,12 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
         }`}
     >
       {/* Workspace header */}
-      <div className="px-3 py-3 h-[45px] flex items-center justify-between cursor-pointer hover:bg-[var(--workspace-hover)] transition-colors m-1 rounded">
+      <div className="px-3 py-3 h-[45px] flex items-center m-1">
         <div className="flex items-center gap-2 overflow-hidden">
           <div className="w-5 h-5 rounded bg-[var(--workspace-accent)] flex items-center justify-center text-xs font-medium text-white">
             {user?.email?.charAt(0).toUpperCase() || "S"}
           </div>
           <span className="truncate text-sm font-medium">Shuriken Note</span>
-          <ChevronDown size={14} className="text-[var(--workspace-text-secondary)]" />
-        </div>
-        <div className="hidden group-hover/sidebar:flex text-[var(--workspace-text-secondary)]">
-          <SquarePen size={16} />
         </div>
       </div>
 
