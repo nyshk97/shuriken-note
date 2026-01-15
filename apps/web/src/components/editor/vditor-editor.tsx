@@ -89,6 +89,7 @@ export function VditorEditor({
         minHeight: typeof height === "number" ? height : 300,
         theme: "dark",
         icon: "ant",
+        lang: "en_US",
         toolbar: [
           "headings",
           "bold",
