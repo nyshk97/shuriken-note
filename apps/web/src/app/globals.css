@@ -221,3 +221,40 @@
 .icon-xs {
   font-size: 14px;
 }
+
+/* Vditor: Force Japanese font to prevent Chinese glyphs */
+.vditor,
+.vditor *,
+.vditor-ir,
+.vditor-ir *,
+.vditor-wysiwyg,
+.vditor-wysiwyg *,
+.vditor-sv,
+.vditor-sv *,
+.vditor-content,
+.vditor-content * {
+  font-family:
+    "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN",
+    "Hiragino Sans",
+    "Yu Gothic UI",
+    "Meiryo",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif !important;
+}
+
+/* Vditor code blocks: Use monospace font */
+.vditor pre,
+.vditor pre *,
+.vditor code,
+.vditor code *,
+.vditor .vditor-ir__marker,
+.vditor .vditor-ir__marker * {
+  font-family:
+    "SF Mono",
+    "Fira Code",
+    "Consolas",
+    "Menlo",
+    monospace !important;
+}
