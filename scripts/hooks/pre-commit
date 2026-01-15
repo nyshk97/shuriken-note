@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# === Ruby (API) ===
+STAGED_RB_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.rb$')
+
+if [ -n "$STAGED_RB_FILES" ]; then
+  echo "Running Rubocop on staged Ruby files..."
+
+  # Remove apps/api/ prefix to convert to container path
+  CONTAINER_FILES=$(echo "$STAGED_RB_FILES" | sed 's|^apps/api/||')
+
+  # Run Rubocop with auto-fix mode
+  docker compose exec -T api bin/rubocop -a $CONTAINER_FILES
+
+  RUBOCOP_EXIT=$?
+
+  # Re-stage fixed files
+  git add $STAGED_RB_FILES
+
+  if [ $RUBOCOP_EXIT -ne 0 ]; then
+    echo "Rubocop found issues that couldn't be auto-fixed. Please fix them manually."
+    exit 1
+  fi
+fi
+
+# === TypeScript (Web) ===
+STAGED_TS_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'apps/web/.*\.(ts|tsx)$')
+
+if [ -n "$STAGED_TS_FILES" ]; then
+  echo "Running ESLint on staged TypeScript files..."
+
+  # Run ESLint with auto-fix mode
+  npm run lint --prefix apps/web -- --fix
+
+  ESLINT_EXIT=$?
+
+  # Re-stage fixed files
+  git add $STAGED_TS_FILES
+
+  if [ $ESLINT_EXIT -ne 0 ]; then
+    echo "ESLint found issues that couldn't be auto-fixed. Please fix them manually."
+    exit 1
+  fi
+fi
+
+exit 0

@@ -1,4 +1,4 @@
-.PHONY: up stop bash bundle console migrate credentials rspec swagger help
+.PHONY: up stop bash bundle console migrate credentials rspec swagger install-githooks help
 
 # Start API and Web (both background)
 up:
@@ -34,6 +34,11 @@ rspec:
 swagger:
 	docker compose exec -e RAILS_ENV=test api bundle exec rake rswag:specs:swaggerize
 
+install-githooks:
+	cp scripts/hooks/pre-commit .git/hooks/pre-commit
+	chmod +x .git/hooks/pre-commit
+	@echo "Git hooks installed."
+
 help:
 	@echo "Usage: make [target]"
 	@echo ""
@@ -46,3 +51,4 @@ help:
 	@echo "  credentials   Edit Rails credentials"
 	@echo "  rspec         Run RSpec tests"
 	@echo "  swagger       Generate OpenAPI documentation"
+	@echo "  install-githooks  Install git hooks"
