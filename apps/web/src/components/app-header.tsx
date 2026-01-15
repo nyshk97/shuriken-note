@@ -14,6 +14,7 @@ import {
   MoreHorizontal,
   Trash2,
   LogOut,
+  ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getNote, updateNote, deleteNote, type Note } from "@/lib/api";
@@ -169,6 +170,19 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Open public page button (only for published notes) */}
+            {note.status === "published" && (
+              <a
+                href={`/p/${note.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-2 py-0.5 text-xs text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] hover:text-[var(--workspace-text-primary)] rounded transition-colors"
+                title="Open public page"
+              >
+                <ExternalLink size={14} />
+              </a>
+            )}
           </>
         )}
       </div>

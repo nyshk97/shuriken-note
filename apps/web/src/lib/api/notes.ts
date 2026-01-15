@@ -94,3 +94,28 @@ export async function deleteNote(id: string): Promise<void> {
     method: "DELETE",
   });
 }
+
+// Public note type (subset of Note, without user-specific fields)
+export interface PublicNote {
+  id: string;
+  title: string | null;
+  body: string | null;
+  status: "published";
+  created_at: string;
+  updated_at: string;
+}
+
+interface PublicNoteResponse {
+  note: PublicNote;
+}
+
+/**
+ * Get a published note by ID (no authentication required)
+ * Returns 404 if note doesn't exist or is not published
+ */
+export async function getPublicNote(id: string): Promise<PublicNote> {
+  const response = await apiClient<PublicNoteResponse>(`/p/${id}`, {
+    skipAuth: true,
+  });
+  return response.note;
+}
