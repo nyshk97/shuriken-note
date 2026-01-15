@@ -208,8 +208,6 @@ paths:
                         body:
                           type: string
                           nullable: true
-                        slug:
-                          type: string
                         status:
                           type: string
                           enum:
@@ -224,7 +222,6 @@ paths:
                           format: date-time
                       required:
                       - id
-                      - slug
                       - status
                       - created_at
                       - updated_at
@@ -246,7 +243,7 @@ paths:
       parameters: []
       responses:
         '201':
-          description: note created without title (generates random slug)
+          description: note created without title
           content:
             application/json:
               schema:

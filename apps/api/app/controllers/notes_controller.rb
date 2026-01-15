@@ -58,7 +58,6 @@ class NotesController < ApplicationController
       id: note.id,
       title: note.title,
       body: note.body,
-      slug: note.slug,
       status: note.status,
       created_at: note.created_at,
       updated_at: note.updated_at

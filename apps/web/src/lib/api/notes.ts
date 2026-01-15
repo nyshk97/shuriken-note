@@ -5,7 +5,6 @@ export interface Note {
   id: string; // UUID
   title: string;
   body: string;
-  slug: string;
   status: "personal" | "published" | "archived";
   created_at: string;
   updated_at: string;

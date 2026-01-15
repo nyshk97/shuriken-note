@@ -91,31 +91,4 @@ RSpec.describe Note do
       end
     end
   end
-
-  describe 'slug generation' do
-    let(:user) { create(:user) }
-
-    context 'when title is present' do
-      it 'generates slug from title' do
-        note = create(:note, user: user, title: 'My Test Note')
-        expect(note.slug).to eq('my-test-note')
-      end
-    end
-
-    context 'when title is blank' do
-      it 'generates random slug' do
-        note = create(:note, user: user, title: '')
-        expect(note.slug).to be_present
-        expect(note.slug.length).to eq(12)
-      end
-    end
-
-    context 'when title contains only non-ASCII characters' do
-      it 'generates random slug for Japanese-only title' do
-        note = create(:note, user: user, title: '日本語タイトル')
-        expect(note.slug).to be_present
-        expect(note.slug.length).to eq(12)
-      end
-    end
-  end
 end
