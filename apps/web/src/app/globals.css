@@ -250,8 +250,14 @@
   padding: 0 !important;
 }
 
-.note-editor .vditor-ir {
-  background: transparent !important;
+.note-editor .vditor-ir,
+.note-editor .vditor-content {
+  background: var(--workspace-bg) !important;
+}
+
+/* Vditor editor area (not code blocks) */
+.note-editor .vditor-ir>.vditor-reset {
+  background: var(--workspace-bg) !important;
 }
 
 /* Vditor: Force Japanese font to prevent Chinese glyphs */
