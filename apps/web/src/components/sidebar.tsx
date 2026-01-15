@@ -24,7 +24,6 @@ type NoteSection = {
 export function Sidebar() {
   const { user } = useAuth();
   const pathname = usePathname();
-  const createNoteMutation = useCreateNote();
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ["notes"],
@@ -101,18 +100,6 @@ export function Sidebar() {
         )}
       </div>
 
-      {/* Footer - New page button */}
-      <div className="p-2 border-t border-[var(--workspace-border)] mt-auto">
-        <button
-          type="button"
-          onClick={() => createNoteMutation.mutate("personal")}
-          disabled={createNoteMutation.isPending}
-          className="w-full flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span className="material-symbols-outlined icon-sm">add</span>
-          <span>{createNoteMutation.isPending ? "Creating..." : "New page"}</span>
-        </button>
-      </div>
     </aside>
   );
 }
