@@ -88,11 +88,12 @@ export function Sidebar() {
           </div>
         ) : (
           sections.map((section) => (
-            <NoteSection
+            <NoteSectionComponent
               key={section.key}
               label={section.label}
               notes={section.notes}
               currentPath={pathname}
+              defaultExpanded={section.key !== "archived"}
             />
           ))
         )}
@@ -114,38 +115,56 @@ export function Sidebar() {
   );
 }
 
-function NoteSection({
+function NoteSectionComponent({
   label,
   notes,
   currentPath,
+  defaultExpanded = true,
 }: {
   label: string;
   notes: Note[];
   currentPath: string;
+  defaultExpanded?: boolean;
 }) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  const toggleExpanded = () => setIsExpanded((prev) => !prev);
+
   return (
     <div>
-      <div className="px-3 py-1 text-xs font-semibold text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer flex items-center justify-between group/header">
+      <button
+        type="button"
+        onClick={toggleExpanded}
+        className="w-full px-3 py-1 text-xs font-semibold text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer flex items-center gap-1"
+      >
+        <span
+          className={`material-symbols-outlined icon-xs transition-transform ${isExpanded ? "rotate-90" : ""
+            }`}
+        >
+          chevron_right
+        </span>
         <span>{label}</span>
-      </div>
-      <div className="mt-0.5 space-y-0.5">
-        {notes.length === 0 ? (
-          <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-tertiary)] italic">
-            <span className="material-symbols-outlined icon-sm">
-              description
-            </span>
-            <span className="truncate">No notes</span>
-          </div>
-        ) : (
-          notes.map((note) => (
-            <NoteItem
-              key={note.id}
-              note={note}
-              isActive={currentPath === `/notes/${note.id}`}
-            />
-          ))
-        )}
-      </div>
+      </button>
+      {isExpanded && (
+        <div className="mt-0.5 space-y-0.5">
+          {notes.length === 0 ? (
+            <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-tertiary)] italic ml-4">
+              <span className="material-symbols-outlined icon-sm">
+                description
+              </span>
+              <span className="truncate">No notes</span>
+            </div>
+          ) : (
+            notes.map((note) => (
+              <NoteItem
+                key={note.id}
+                note={note}
+                isActive={currentPath === `/notes/${note.id}`}
+              />
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -196,8 +215,8 @@ function NoteItem({ note, isActive }: { note: Note; isActive: boolean }) {
       <Link
         href={`/notes/${note.id}`}
         className={`flex items-center gap-2 px-3 py-1 text-sm rounded cursor-pointer transition-colors ${isActive
-            ? "bg-[var(--workspace-active)] text-[var(--workspace-text-primary)]"
-            : "text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)]"
+          ? "bg-[var(--workspace-active)] text-[var(--workspace-text-primary)]"
+          : "text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)]"
           }`}
       >
         <span className="material-symbols-outlined icon-sm">description</span>
@@ -214,8 +233,8 @@ function NoteItem({ note, isActive }: { note: Note; isActive: boolean }) {
               e.stopPropagation();
             }}
             className={`absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-[var(--workspace-hover)] transition-opacity ${menuOpen
-                ? "opacity-100"
-                : "opacity-0 group-hover/item:opacity-100"
+              ? "opacity-100"
+              : "opacity-0 group-hover/item:opacity-100"
               }`}
           >
             <span className="material-symbols-outlined icon-sm text-[var(--workspace-text-secondary)]">
