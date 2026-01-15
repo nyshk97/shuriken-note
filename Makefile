@@ -1,4 +1,4 @@
-.PHONY: up stop bash bundle console migrate credentials rspec swagger install-githooks help
+.PHONY: up stop restart bash bundle console migrate credentials rspec swagger install-githooks help
 
 # Start API and Web (both background)
 up:
@@ -12,6 +12,9 @@ up:
 stop:
 	-lsof -ti:3001 | xargs kill -9 2>/dev/null
 	docker compose stop
+
+# Restart API and Web
+restart: stop up
 
 bash:
 	docker compose exec api bash
@@ -44,6 +47,7 @@ help:
 	@echo ""
 	@echo "  up            Start API and Web servers"
 	@echo "  stop          Stop API and Web servers"
+	@echo "  restart       Restart API and Web servers"
 	@echo "  bash          Open bash in API container"
 	@echo "  bundle        Install gems"
 	@echo "  console       Open Rails console"
