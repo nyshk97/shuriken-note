@@ -42,26 +42,35 @@ export function useFloatingToolbar({
 
   // Calculate position based on cursor/selection
   const updatePosition = useCallback(() => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
-      // Fallback: center of container
+    const toolbarHeight = 40;
+    const toolbarWidth = 200;
+    const padding = 8;
+
+    // Fallback position: center of container
+    const setFallbackPosition = () => {
       if (containerRef?.current) {
-        const rect = containerRef.current.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
         setPosition({
-          top: rect.top + 100,
-          left: rect.left + rect.width / 2 - 100,
+          top: containerRect.top + 100,
+          left: containerRect.left + containerRect.width / 2 - toolbarWidth / 2,
         });
       }
+    };
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      setFallbackPosition();
       return;
     }
 
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
 
-    // Position slightly above the cursor
-    const toolbarHeight = 40;
-    const toolbarWidth = 200;
-    const padding = 8;
+    // If rect is invalid (e.g., cursor at end of file), use fallback
+    if (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0) {
+      setFallbackPosition();
+      return;
+    }
 
     let top = rect.top - toolbarHeight - padding;
     let left = rect.left;
