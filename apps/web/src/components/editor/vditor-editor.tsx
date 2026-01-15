@@ -120,7 +120,7 @@ export function VditorEditor({
             current: "dark",
           },
           hljs: {
-            style: "native",
+            style: "github-dark",
             lineNumber: true,
           },
           markdown: {
