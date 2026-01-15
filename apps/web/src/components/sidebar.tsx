@@ -70,11 +70,11 @@ export function Sidebar() {
       {/* Quick actions */}
       <div className="px-2 flex flex-col gap-0.5 mb-4">
         <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer">
-          <span className="material-symbols-outlined icon-sm">search</span>
+          <span className="material-symbols-outlined icon-md">search</span>
           <span>Search</span>
         </div>
         <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer">
-          <span className="material-symbols-outlined icon-sm">settings</span>
+          <span className="material-symbols-outlined icon-md">settings</span>
           <span>Settings</span>
         </div>
       </div>
@@ -160,7 +160,7 @@ function NoteSectionComponent({
               disabled={createNoteMutation.isPending}
               className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-tertiary)] hover:bg-[var(--workspace-hover)] hover:text-[var(--workspace-text-secondary)] rounded cursor-pointer transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="material-symbols-outlined icon-sm">add</span>
+              <span className="material-symbols-outlined icon-md">add</span>
               <span>{createNoteMutation.isPending ? "Creating..." : "New page"}</span>
             </button>
           )}
@@ -220,7 +220,13 @@ function NoteItem({ note, isActive }: { note: Note; isActive: boolean }) {
           : "text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)]"
           }`}
       >
-        <span className="material-symbols-outlined icon-sm">description</span>
+        <span className="material-symbols-outlined icon-md">
+          {note.status === "published"
+            ? "public"
+            : note.status === "archived"
+              ? "inventory_2"
+              : "description"}
+        </span>
         <span className="truncate flex-1">{note.title || "Untitled"}</span>
       </Link>
 

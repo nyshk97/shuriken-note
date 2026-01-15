@@ -214,12 +214,16 @@
   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
 }
 
+.icon-md {
+  font-size: 20px !important;
+}
+
 .icon-sm {
-  font-size: 16px;
+  font-size: 16px !important;
 }
 
 .icon-xs {
-  font-size: 14px;
+  font-size: 14px !important;
 }
 
 /* Vditor: Note editor full height */
