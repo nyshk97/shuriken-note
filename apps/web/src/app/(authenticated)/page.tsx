@@ -1,5 +1,6 @@
 "use client";
 
+import { Plus, Search, History } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
 
@@ -27,10 +28,8 @@ export default function Home() {
           disabled={createNoteMutation.isPending}
           className="flex items-center gap-3 p-4 rounded-lg border border-[var(--workspace-border)] hover:bg-[var(--workspace-hover)] transition-colors text-left group disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="w-10 h-10 rounded-lg bg-[var(--workspace-hover)] flex items-center justify-center group-hover:bg-[var(--workspace-active)] transition-colors">
-            <span className="material-symbols-outlined text-[var(--workspace-text-secondary)]">
-              add
-            </span>
+          <div className="w-10 h-10 rounded-lg bg-[var(--workspace-hover)] flex items-center justify-center group-hover:bg-[var(--workspace-active)] transition-colors text-[var(--workspace-text-secondary)]">
+            <Plus size={24} />
           </div>
           <div>
             <p className="font-medium text-[var(--workspace-text-primary)]">
@@ -46,10 +45,8 @@ export default function Home() {
           type="button"
           className="flex items-center gap-3 p-4 rounded-lg border border-[var(--workspace-border)] hover:bg-[var(--workspace-hover)] transition-colors text-left group"
         >
-          <div className="w-10 h-10 rounded-lg bg-[var(--workspace-hover)] flex items-center justify-center group-hover:bg-[var(--workspace-active)] transition-colors">
-            <span className="material-symbols-outlined text-[var(--workspace-text-secondary)]">
-              search
-            </span>
+          <div className="w-10 h-10 rounded-lg bg-[var(--workspace-hover)] flex items-center justify-center group-hover:bg-[var(--workspace-active)] transition-colors text-[var(--workspace-text-secondary)]">
+            <Search size={24} />
           </div>
           <div>
             <p className="font-medium text-[var(--workspace-text-primary)]">
@@ -65,10 +62,8 @@ export default function Home() {
           type="button"
           className="flex items-center gap-3 p-4 rounded-lg border border-[var(--workspace-border)] hover:bg-[var(--workspace-hover)] transition-colors text-left group"
         >
-          <div className="w-10 h-10 rounded-lg bg-[var(--workspace-hover)] flex items-center justify-center group-hover:bg-[var(--workspace-active)] transition-colors">
-            <span className="material-symbols-outlined text-[var(--workspace-text-secondary)]">
-              history
-            </span>
+          <div className="w-10 h-10 rounded-lg bg-[var(--workspace-hover)] flex items-center justify-center group-hover:bg-[var(--workspace-active)] transition-colors text-[var(--workspace-text-secondary)]">
+            <History size={24} />
           </div>
           <div>
             <p className="font-medium text-[var(--workspace-text-primary)]">

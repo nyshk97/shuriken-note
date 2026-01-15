@@ -15,6 +15,19 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import {
+  ChevronDown,
+  ChevronRight,
+  SquarePen,
+  Search,
+  Settings,
+  Globe,
+  Archive,
+  FileText,
+  Plus,
+  MoreHorizontal,
+  Trash2,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
 import { getNotes, deleteNote, updateNote, type Note } from "@/lib/api";
@@ -118,23 +131,21 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
             {user?.email?.charAt(0).toUpperCase() || "S"}
           </div>
           <span className="truncate text-sm font-medium">Shuriken Note</span>
-          <span className="material-symbols-outlined icon-xs text-[var(--workspace-text-secondary)]">
-            expand_more
-          </span>
+          <ChevronDown size={14} className="text-[var(--workspace-text-secondary)]" />
         </div>
         <div className="hidden group-hover/sidebar:flex text-[var(--workspace-text-secondary)]">
-          <span className="material-symbols-outlined icon-sm">edit_square</span>
+          <SquarePen size={16} />
         </div>
       </div>
 
       {/* Quick actions */}
       <div className="px-2 flex flex-col gap-0.5 mb-4">
         <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer">
-          <span className="material-symbols-outlined icon-md">search</span>
+          <Search size={18} />
           <span>Search</span>
         </div>
         <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer">
-          <span className="material-symbols-outlined icon-md">settings</span>
+          <Settings size={18} />
           <span>Settings</span>
         </div>
       </div>
@@ -169,13 +180,13 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
         <DragOverlay>
           {activeNote ? (
             <div className="flex items-center gap-2 px-3 py-1 text-sm rounded bg-[var(--workspace-active)] text-[var(--workspace-text-primary)] shadow-lg opacity-90">
-              <span className="material-symbols-outlined icon-md">
-                {activeNote.status === "published"
-                  ? "public"
-                  : activeNote.status === "archived"
-                    ? "inventory_2"
-                    : "description"}
-              </span>
+              {activeNote.status === "published" ? (
+                <Globe size={18} />
+              ) : activeNote.status === "archived" ? (
+                <Archive size={18} />
+              ) : (
+                <FileText size={18} />
+              )}
               <span className="truncate">{activeNote.title || "Untitled"}</span>
             </div>
           ) : null}
@@ -223,12 +234,10 @@ function NoteSectionComponent({
         className={`w-full px-3 py-1 text-xs font-semibold text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer flex items-center gap-1 transition-colors ${isOver ? "bg-[var(--workspace-accent)]/20" : ""
           }`}
       >
-        <span
-          className={`material-symbols-outlined icon-xs transition-transform ${isExpanded ? "rotate-90" : ""
-            }`}
-        >
-          chevron_right
-        </span>
+        <ChevronRight
+          size={14}
+          className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
+        />
         <span>{label}</span>
       </button>
       {isExpanded && (
@@ -247,7 +256,7 @@ function NoteSectionComponent({
               disabled={createNoteMutation.isPending}
               className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-tertiary)] hover:bg-[var(--workspace-hover)] hover:text-[var(--workspace-text-secondary)] rounded cursor-pointer transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="material-symbols-outlined icon-md">add</span>
+              <Plus size={18} />
               <span>{createNoteMutation.isPending ? "Creating..." : "New page"}</span>
             </button>
           )}
@@ -335,13 +344,13 @@ function NoteItemContent({
           }
         }}
       >
-        <span className="material-symbols-outlined icon-md">
-          {note.status === "published"
-            ? "public"
-            : note.status === "archived"
-              ? "inventory_2"
-              : "description"}
-        </span>
+        {note.status === "published" ? (
+          <Globe size={18} />
+        ) : note.status === "archived" ? (
+          <Archive size={18} />
+        ) : (
+          <FileText size={18} />
+        )}
         <span className="truncate flex-1">{note.title || "Untitled"}</span>
       </Link>
 
@@ -360,9 +369,7 @@ function NoteItemContent({
                 : "opacity-0 group-hover/item:opacity-100"
                 }`}
             >
-              <span className="material-symbols-outlined icon-sm text-[var(--workspace-text-secondary)]">
-                more_horiz
-              </span>
+              <MoreHorizontal size={16} className="text-[var(--workspace-text-secondary)]" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -375,9 +382,7 @@ function NoteItemContent({
               disabled={deleteMutation.isPending}
               className="text-red-500 focus:bg-red-500/10 focus:text-red-500 cursor-pointer"
             >
-              <span className="material-symbols-outlined icon-sm mr-2">
-                delete
-              </span>
+              <Trash2 size={16} className="mr-2 text-red-500" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>

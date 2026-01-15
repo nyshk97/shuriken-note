@@ -3,6 +3,18 @@
 import { useState } from "react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  PanelLeftClose,
+  PanelLeft,
+  Globe,
+  Lock,
+  Archive,
+  ChevronDown,
+  Star,
+  MoreHorizontal,
+  Trash2,
+  LogOut,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getNote, updateNote, deleteNote, type Note } from "@/lib/api";
 import { useSaveStatus } from "@/contexts/save-status-context";
@@ -110,12 +122,10 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="flex items-center p-1 hover:bg-[var(--workspace-hover)] rounded cursor-pointer transition-colors"
+          className="flex items-center p-1 hover:bg-[var(--workspace-hover)] rounded cursor-pointer transition-colors text-[var(--workspace-text-secondary)]"
           title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
-          <span className="material-symbols-outlined icon-sm text-[var(--workspace-text-secondary)]">
-            {sidebarOpen ? "menu_open" : "menu"}
-          </span>
+          {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeft size={16} />}
         </button>
 
         {/* Note info (only shown on note pages) */}
@@ -130,13 +140,9 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1 px-2 py-0.5 text-xs text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded transition-colors">
-                  <span className="material-symbols-outlined icon-xs">
-                    {note.status === "published" ? "public" : "lock"}
-                  </span>
+                  {note.status === "published" ? <Globe size={14} /> : <Lock size={14} />}
                   <span>{statusLabels[note.status]}</span>
-                  <span className="material-symbols-outlined icon-xs">
-                    expand_more
-                  </span>
+                  <ChevronDown size={14} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
@@ -144,21 +150,21 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
                   onClick={() => handleStatusChange("personal")}
                   className={note.status === "personal" ? "bg-[var(--workspace-hover)]" : ""}
                 >
-                  <span className="material-symbols-outlined icon-sm mr-2">lock</span>
+                  <Lock size={16} className="mr-2" />
                   Private
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleStatusChange("published")}
                   className={note.status === "published" ? "bg-[var(--workspace-hover)]" : ""}
                 >
-                  <span className="material-symbols-outlined icon-sm mr-2">public</span>
+                  <Globe size={16} className="mr-2" />
                   Public
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleStatusChange("archived")}
                   className={note.status === "archived" ? "bg-[var(--workspace-hover)]" : ""}
                 >
-                  <span className="material-symbols-outlined icon-sm mr-2">inventory_2</span>
+                  <Archive size={16} className="mr-2" />
                   Archived
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -186,7 +192,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
               className="p-1 hover:bg-[var(--workspace-hover)] rounded transition-colors"
               title="Add to favorites"
             >
-              <span className="material-symbols-outlined icon-sm">star_outline</span>
+              <Star size={16} />
             </button>
 
             {/* More options */}
@@ -196,7 +202,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
                   type="button"
                   className="p-1 hover:bg-[var(--workspace-hover)] rounded transition-colors"
                 >
-                  <span className="material-symbols-outlined icon-sm">more_horiz</span>
+                  <MoreHorizontal size={16} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -204,7 +210,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
                   onClick={handleDelete}
                   className="text-red-400 focus:text-red-400"
                 >
-                  <span className="material-symbols-outlined icon-sm mr-2">delete</span>
+                  <Trash2 size={16} className="mr-2 text-red-400" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -225,7 +231,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
             <span className="hidden sm:block max-w-[120px] truncate">
               {user?.email}
             </span>
-            <span className="material-symbols-outlined icon-xs">expand_more</span>
+            <ChevronDown size={14} />
           </button>
 
           {/* User dropdown menu */}
@@ -254,9 +260,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
                     disabled={isLoggingOut}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] hover:text-[var(--workspace-text-primary)] transition-colors disabled:opacity-50"
                   >
-                    <span className="material-symbols-outlined icon-sm">
-                      logout
-                    </span>
+                    <LogOut size={16} />
                     <span>{isLoggingOut ? "ログアウト中..." : "ログアウト"}</span>
                   </button>
                 </div>
