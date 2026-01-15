@@ -1,11 +1,19 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
-import { getNotes, type Note } from "@/lib/api";
+import { getNotes, updateNote, deleteNote, type Note } from "@/lib/api";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type NoteSection = {
   key: Note["status"];
@@ -129,26 +137,120 @@ function NoteSection({
             <span className="truncate">No notes</span>
           </div>
         ) : (
-          notes.map((note) => {
-            const isActive = currentPath === `/notes/${note.id}`;
-            return (
-              <Link
-                key={note.id}
-                href={`/notes/${note.id}`}
-                className={`flex items-center gap-2 px-3 py-1 text-sm rounded cursor-pointer transition-colors ${isActive
-                    ? "bg-[var(--workspace-active)] text-[var(--workspace-text-primary)]"
-                    : "text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)]"
-                  }`}
-              >
-                <span className="material-symbols-outlined icon-sm">
-                  description
-                </span>
-                <span className="truncate">{note.title || "Untitled"}</span>
-              </Link>
-            );
-          })
+          notes.map((note) => (
+            <NoteItem
+              key={note.id}
+              note={note}
+              isActive={currentPath === `/notes/${note.id}`}
+            />
+          ))
         )}
       </div>
+    </div>
+  );
+}
+
+function NoteItem({ note, isActive }: { note: Note; isActive: boolean }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteNote(note.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      // If we're on the deleted note's page, navigate home
+      if (isActive) {
+        router.push("/");
+      }
+    },
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: () =>
+      updateNote(note.id, {
+        status: note.status === "archived" ? "personal" : "archived",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["note", note.id] });
+    },
+  });
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (confirm("Are you sure you want to delete this note?")) {
+      deleteMutation.mutate();
+    }
+  };
+
+  const handleArchive = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    archiveMutation.mutate();
+  };
+
+  return (
+    <div className="group/item relative">
+      <Link
+        href={`/notes/${note.id}`}
+        className={`flex items-center gap-2 px-3 py-1 text-sm rounded cursor-pointer transition-colors ${isActive
+            ? "bg-[var(--workspace-active)] text-[var(--workspace-text-primary)]"
+            : "text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)]"
+          }`}
+      >
+        <span className="material-symbols-outlined icon-sm">description</span>
+        <span className="truncate flex-1">{note.title || "Untitled"}</span>
+      </Link>
+
+      {/* Context menu trigger */}
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className={`absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-[var(--workspace-hover)] transition-opacity ${menuOpen
+                ? "opacity-100"
+                : "opacity-0 group-hover/item:opacity-100"
+              }`}
+          >
+            <span className="material-symbols-outlined icon-sm text-[var(--workspace-text-secondary)]">
+              more_horiz
+            </span>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          side="right"
+          className="w-48 bg-[var(--workspace-sidebar)] border-[var(--workspace-border)]"
+        >
+          <DropdownMenuItem
+            onClick={handleArchive}
+            disabled={archiveMutation.isPending}
+            className="text-[var(--workspace-text-secondary)] focus:bg-[var(--workspace-hover)] focus:text-[var(--workspace-text-primary)] cursor-pointer"
+          >
+            <span className="material-symbols-outlined icon-sm mr-2">
+              {note.status === "archived" ? "unarchive" : "archive"}
+            </span>
+            {note.status === "archived" ? "Unarchive" : "Archive"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="bg-[var(--workspace-border)]" />
+          <DropdownMenuItem
+            onClick={handleDelete}
+            disabled={deleteMutation.isPending}
+            className="text-red-500 focus:bg-red-500/10 focus:text-red-500 cursor-pointer"
+          >
+            <span className="material-symbols-outlined icon-sm mr-2">
+              delete
+            </span>
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
