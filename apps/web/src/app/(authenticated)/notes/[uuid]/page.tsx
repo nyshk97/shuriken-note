@@ -1,19 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getNote, updateNote, deleteNote } from "@/lib/api";
+import { getNote, updateNote, deleteNote, type Note } from "@/lib/api";
 
 export default function NoteEditorPage() {
   const params = useParams();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const uuid = params.uuid as string;
-
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [hasChanges, setHasChanges] = useState(false);
 
   const {
     data: note,
@@ -24,54 +19,6 @@ export default function NoteEditorPage() {
     queryFn: () => getNote(uuid),
     enabled: !!uuid,
   });
-
-  // Sync local state with fetched note
-  useEffect(() => {
-    if (note) {
-      setTitle(note.title);
-      setBody(note.body);
-      setHasChanges(false);
-    }
-  }, [note]);
-
-  // Track changes
-  useEffect(() => {
-    if (note) {
-      const titleChanged = title !== note.title;
-      const bodyChanged = body !== note.body;
-      setHasChanges(titleChanged || bodyChanged);
-    }
-  }, [title, body, note]);
-
-  const updateMutation = useMutation({
-    mutationFn: (data: { title: string; body: string }) =>
-      updateNote(uuid, data),
-    onSuccess: (updatedNote) => {
-      // Update cache
-      queryClient.setQueryData(["note", uuid], updatedNote);
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setHasChanges(false);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteNote(uuid),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      router.push("/");
-    },
-  });
-
-  const handleSave = useCallback(() => {
-    if (!hasChanges) return;
-    updateMutation.mutate({ title, body });
-  }, [hasChanges, title, body, updateMutation]);
-
-  const handleDelete = useCallback(() => {
-    if (confirm("Are you sure you want to delete this note?")) {
-      deleteMutation.mutate();
-    }
-  }, [deleteMutation]);
 
   if (isLoading) {
     return (
@@ -86,7 +33,7 @@ export default function NoteEditorPage() {
     );
   }
 
-  if (error) {
+  if (error || !note) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
@@ -104,6 +51,52 @@ export default function NoteEditorPage() {
       </div>
     );
   }
+
+  // Use key to remount editor when note changes
+  return <NoteEditor key={note.id} note={note} />;
+}
+
+function NoteEditor({ note }: { note: Note }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // Initialize with note values - this runs once per mount
+  const [title, setTitle] = useState(note.title);
+  const [body, setBody] = useState(note.body);
+
+  // Calculate hasChanges with useMemo instead of useEffect + setState
+  const hasChanges = useMemo(() => {
+    return title !== note.title || body !== note.body;
+  }, [title, body, note.title, note.body]);
+
+  const updateMutation = useMutation({
+    mutationFn: (data: { title: string; body: string }) =>
+      updateNote(note.id, data),
+    onSuccess: (updatedNote) => {
+      // Update cache
+      queryClient.setQueryData(["note", note.id], updatedNote);
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteNote(note.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      router.push("/");
+    },
+  });
+
+  const handleSave = useCallback(() => {
+    if (!hasChanges) return;
+    updateMutation.mutate({ title, body });
+  }, [hasChanges, title, body, updateMutation]);
+
+  const handleDelete = useCallback(() => {
+    if (confirm("Are you sure you want to delete this note?")) {
+      deleteMutation.mutate();
+    }
+  }, [deleteMutation]);
 
   return (
     <div className="max-w-[900px] mx-auto px-12 sm:px-24 pt-12 pb-32 h-full flex flex-col">
