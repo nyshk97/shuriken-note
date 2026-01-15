@@ -17,4 +17,7 @@ Rails.application.routes.draw do
 
   # Notes
   resources :notes, only: %i[index show create update destroy]
+
+  # Public notes (no authentication required)
+  get 'p/:id', to: 'public_notes#show', as: :public_note
 end

@@ -167,7 +167,8 @@ paths:
       summary: List notes
       tags:
       - Notes
-      description: Returns all notes for the current user with optional sorting and search
+      description: Returns all notes for the current user with optional sorting and
+        search
       security:
       - bearer_auth: []
       parameters:
@@ -261,8 +262,6 @@ paths:
                       body:
                         type: string
                         nullable: true
-                      slug:
-                        type: string
                       status:
                         type: string
                         enum:
@@ -277,7 +276,6 @@ paths:
                         format: date-time
                     required:
                     - id
-                    - slug
                     - status
                     - created_at
                     - updated_at
@@ -355,8 +353,6 @@ paths:
                       body:
                         type: string
                         nullable: true
-                      slug:
-                        type: string
                       status:
                         type: string
                         enum:
@@ -371,7 +367,6 @@ paths:
                         format: date-time
                     required:
                     - id
-                    - slug
                     - status
                     - created_at
                     - updated_at
@@ -417,8 +412,6 @@ paths:
                       body:
                         type: string
                         nullable: true
-                      slug:
-                        type: string
                       status:
                         type: string
                         enum:
@@ -433,7 +426,6 @@ paths:
                         format: date-time
                     required:
                     - id
-                    - slug
                     - status
                     - created_at
                     - updated_at
@@ -492,6 +484,63 @@ paths:
           description: unauthorized
         '404':
           description: note not found
+  "/p/{id}":
+    parameters:
+    - name: id
+      in: path
+      format: uuid
+      description: Note ID
+      required: true
+      schema:
+        type: string
+    get:
+      summary: Get a published note
+      tags:
+      - Public Notes
+      description: Returns a published note by ID. No authentication required.
+      responses:
+        '200':
+          description: published note returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  note:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      title:
+                        type: string
+                        nullable: true
+                      body:
+                        type: string
+                        nullable: true
+                      status:
+                        type: string
+                        enum:
+                        - published
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                    required:
+                    - id
+                    - status
+                    - created_at
+                    - updated_at
+                required:
+                - note
+        '404':
+          description: non-existent note returns not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/error_response"
 servers:
 - url: http://localhost:3000
   description: Development server
