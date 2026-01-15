@@ -6,12 +6,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
-import { getNotes, updateNote, deleteNote, type Note } from "@/lib/api";
+import { getNotes, deleteNote, type Note } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -186,29 +185,12 @@ function NoteItem({ note, isActive }: { note: Note; isActive: boolean }) {
     },
   });
 
-  const archiveMutation = useMutation({
-    mutationFn: () =>
-      updateNote(note.id, {
-        status: note.status === "archived" ? "personal" : "archived",
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      queryClient.invalidateQueries({ queryKey: ["note", note.id] });
-    },
-  });
-
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (confirm("Are you sure you want to delete this note?")) {
       deleteMutation.mutate();
     }
-  };
-
-  const handleArchive = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    archiveMutation.mutate();
   };
 
   return (
@@ -254,17 +236,6 @@ function NoteItem({ note, isActive }: { note: Note; isActive: boolean }) {
           side="right"
           className="w-48 bg-[var(--workspace-sidebar)] border-[var(--workspace-border)]"
         >
-          <DropdownMenuItem
-            onClick={handleArchive}
-            disabled={archiveMutation.isPending}
-            className="text-[var(--workspace-text-secondary)] focus:bg-[var(--workspace-hover)] focus:text-[var(--workspace-text-primary)] cursor-pointer"
-          >
-            <span className="material-symbols-outlined icon-sm mr-2">
-              {note.status === "archived" ? "unarchive" : "archive"}
-            </span>
-            {note.status === "archived" ? "Unarchive" : "Archive"}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator className="bg-[var(--workspace-border)]" />
           <DropdownMenuItem
             onClick={handleDelete}
             disabled={deleteMutation.isPending}
