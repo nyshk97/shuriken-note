@@ -14,12 +14,11 @@ RSpec.describe 'Notes API', type: :request do
         id: { type: :string, format: :uuid },
         title: { type: :string, nullable: true },
         body: { type: :string, nullable: true },
-        slug: { type: :string },
         status: { type: :string, enum: %w[personal published archived] },
         created_at: { type: :string, format: 'date-time' },
         updated_at: { type: :string, format: 'date-time' }
       },
-      required: %w[id slug status created_at updated_at]
+      required: %w[id status created_at updated_at]
     }
   end
 
@@ -48,12 +47,11 @@ RSpec.describe 'Notes API', type: :request do
                   id: { type: :string, format: :uuid },
                   title: { type: :string, nullable: true },
                   body: { type: :string, nullable: true },
-                  slug: { type: :string },
                   status: { type: :string, enum: %w[personal published archived] },
                   created_at: { type: :string, format: 'date-time' },
                   updated_at: { type: :string, format: 'date-time' }
                 },
-                required: %w[id slug status created_at updated_at]
+                required: %w[id status created_at updated_at]
               }
             }
           },
@@ -121,12 +119,11 @@ RSpec.describe 'Notes API', type: :request do
                 id: { type: :string, format: :uuid },
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
-                slug: { type: :string },
                 status: { type: :string, enum: %w[personal published archived] },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id slug status created_at updated_at]
+              required: %w[id status created_at updated_at]
             }
           },
           required: %w[note]
@@ -136,14 +133,16 @@ RSpec.describe 'Notes API', type: :request do
         run_test!
       end
 
-      response '201', 'note created without title (generates random slug)' do
+      response '201', 'note created without title' do
         schema type: :object,
           properties: {
             note: {
               type: :object,
               properties: {
                 id: { type: :string, format: :uuid },
-                slug: { type: :string }
+                title: { type: :string, nullable: true },
+                body: { type: :string, nullable: true },
+                status: { type: :string, enum: %w[personal published archived] }
               }
             }
           }
@@ -190,12 +189,11 @@ RSpec.describe 'Notes API', type: :request do
                 id: { type: :string, format: :uuid },
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
-                slug: { type: :string },
                 status: { type: :string, enum: %w[personal published archived] },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id slug status created_at updated_at]
+              required: %w[id status created_at updated_at]
             }
           },
           required: %w[note]
@@ -265,12 +263,11 @@ RSpec.describe 'Notes API', type: :request do
                 id: { type: :string, format: :uuid },
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
-                slug: { type: :string },
                 status: { type: :string, enum: %w[personal published archived] },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id slug status created_at updated_at]
+              required: %w[id status created_at updated_at]
             }
           },
           required: %w[note]
