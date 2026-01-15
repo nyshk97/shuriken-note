@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getNote, updateNote, deleteNote, type Note } from "@/lib/api";
+import { VditorEditor } from "@/components/editor";
 
 export default function NoteEditorPage() {
   const params = useParams();
@@ -99,7 +100,7 @@ function NoteEditor({ note }: { note: Note }) {
   }, [deleteMutation]);
 
   return (
-    <div className="max-w-[900px] mx-auto px-12 sm:px-24 pt-12 pb-32 h-full flex flex-col">
+    <div className="max-w-[900px] mx-auto px-12 sm:px-24 pt-12 h-full flex flex-col">
       {/* Header with actions */}
       <div className="flex items-center justify-between mb-6">
         <div className="text-sm text-[var(--workspace-text-secondary)]">
@@ -140,13 +141,15 @@ function NoteEditor({ note }: { note: Note }) {
         className="w-full text-4xl font-bold bg-transparent border-none outline-none text-[var(--workspace-text-primary)] placeholder:text-[var(--workspace-text-tertiary)] mb-6"
       />
 
-      {/* Body textarea */}
-      <textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder="Start writing..."
-        className="flex-1 w-full bg-transparent border-none outline-none resize-none text-[var(--workspace-text-primary)] placeholder:text-[var(--workspace-text-tertiary)] leading-relaxed"
-      />
+      {/* Body editor */}
+      <div className="flex-1 min-h-0">
+        <VditorEditor
+          value={body}
+          onChange={setBody}
+          placeholder="Start writing..."
+          className="note-editor"
+        />
+      </div>
 
       {/* Error display */}
       {updateMutation.isError && (

@@ -222,6 +222,33 @@
   font-size: 14px;
 }
 
+/* Vditor: Note editor full height */
+.note-editor,
+.note-editor .vditor {
+  height: 100% !important;
+}
+
+.note-editor .vditor-content {
+  height: calc(100% - 37px) !important;
+  /* Subtract toolbar height */
+}
+
+/* Vditor: Match workspace theme */
+.note-editor .vditor {
+  border: none !important;
+  background: transparent !important;
+}
+
+.note-editor .vditor-toolbar {
+  background: var(--workspace-bg) !important;
+  border-bottom: 1px solid var(--workspace-border) !important;
+  padding: 0 !important;
+}
+
+.note-editor .vditor-ir {
+  background: transparent !important;
+}
+
 /* Vditor: Force Japanese font to prevent Chinese glyphs */
 .vditor,
 .vditor *,
