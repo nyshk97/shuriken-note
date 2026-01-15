@@ -296,3 +296,19 @@
     "Menlo",
     monospace !important;
 }
+
+/* Hide heading markers (H2, H3, etc.) in Vditor IR mode */
+.vditor-ir h1::before,
+.vditor-ir h2::before,
+.vditor-ir h3::before,
+.vditor-ir h4::before,
+.vditor-ir h5::before,
+.vditor-ir h6::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Adjust editor padding to align with toolbar */
+.note-editor pre.vditor-reset {
+  padding: 8px 4px !important;
+}
