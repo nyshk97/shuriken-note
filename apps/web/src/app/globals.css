@@ -180,3 +180,44 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Notion-like workspace styles (dark theme only) */
+:root {
+  --workspace-bg: #191919;
+  --workspace-sidebar: #202020;
+  --workspace-border: #2f2f2f;
+  --workspace-text-primary: #d4d4d4;
+  --workspace-text-secondary: rgba(255, 255, 255, 0.445);
+  --workspace-hover: rgba(255, 255, 255, 0.055);
+  --workspace-active: rgba(255, 255, 255, 0.09);
+  --workspace-accent: #2383e2;
+}
+
+/* Custom scrollbar for workspace */
+.workspace-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.workspace-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.workspace-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-size: 20px;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+}
+
+.icon-sm {
+  font-size: 16px;
+}
+
+.icon-xs {
+  font-size: 14px;
+}
