@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "@/components/app-header";
 import { Sidebar } from "@/components/sidebar";
+import { SaveStatusProvider } from "@/contexts/save-status-context";
 
 export default function AuthenticatedLayout({
   children,
@@ -10,6 +12,9 @@ export default function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   const { isLoading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   if (isLoading) {
     return (
@@ -25,17 +30,19 @@ export default function AuthenticatedLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[var(--workspace-bg)] text-[var(--workspace-text-primary)] font-[var(--font-inter)] antialiased selection:bg-[var(--workspace-accent)] selection:text-white">
-      {/* Sidebar */}
-      <Sidebar />
+    <SaveStatusProvider>
+      <div className="flex h-screen overflow-hidden bg-[var(--workspace-bg)] text-[var(--workspace-text-primary)] font-[var(--font-inter)] antialiased selection:bg-[var(--workspace-accent)] selection:text-white">
+        {/* Sidebar */}
+        <Sidebar isOpen={sidebarOpen} />
 
-      {/* Main content area */}
-      <main className="flex flex-1 flex-col h-full relative">
-        <AppHeader />
-        <div className="flex-1 overflow-y-auto workspace-scrollbar">
-          {children}
-        </div>
-      </main>
-    </div>
+        {/* Main content area */}
+        <main className="flex flex-1 flex-col h-full relative">
+          <AppHeader sidebarOpen={sidebarOpen} onToggleSidebar={toggleSidebar} />
+          <div className="flex-1 overflow-y-auto workspace-scrollbar">
+            {children}
+          </div>
+        </main>
+      </div>
+    </SaveStatusProvider>
   );
 }

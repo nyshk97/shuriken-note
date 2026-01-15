@@ -15,6 +15,8 @@ interface UseAutoSaveOptions<T> {
   delay?: number;
   /** Comparison function (default: JSON.stringify comparison) */
   isEqual?: (a: T, b: T) => boolean;
+  /** Optional function to determine if save should be skipped */
+  shouldSkipSave?: (data: T) => boolean;
 }
 
 interface UseAutoSaveReturn {
@@ -39,6 +41,7 @@ export function useAutoSave<T>({
   onSave,
   delay = 3000,
   isEqual = defaultIsEqual,
+  shouldSkipSave,
 }: UseAutoSaveOptions<T>): UseAutoSaveReturn {
   const [status, setStatus] = useState<AutoSaveStatus>("idle");
   const [error, setError] = useState<Error | null>(null);
@@ -58,6 +61,13 @@ export function useAutoSave<T>({
   const performSave = useCallback(
     async (dataToSave: T) => {
       if (isSavingRef.current) return;
+
+      // Skip save if shouldSkipSave returns true
+      if (shouldSkipSave?.(dataToSave)) {
+        setStatus("idle");
+        pendingDataRef.current = null;
+        return;
+      }
 
       isSavingRef.current = true;
       setStatus("saving");
@@ -79,7 +89,7 @@ export function useAutoSave<T>({
         pendingDataRef.current = null;
       }
     },
-    [onSave]
+    [onSave, shouldSkipSave]
   );
 
   // Flush pending changes immediately
