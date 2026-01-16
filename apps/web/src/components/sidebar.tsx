@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -53,6 +53,19 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
   const queryClient = useQueryClient();
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Keyboard shortcut: Cmd+P (Mac) / Ctrl+P (Windows/Linux) to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "p") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ["notes"],
@@ -139,10 +152,13 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer w-full text-left"
+          className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer w-full text-left group"
         >
           <Search size={18} />
-          <span>Search</span>
+          <span className="flex-1">Search</span>
+          <kbd className="text-xs text-[var(--workspace-text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity">
+            ⌘P
+          </kbd>
         </button>
         <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer">
           <Settings size={18} />
