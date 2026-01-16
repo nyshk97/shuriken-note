@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
+import { SearchDialog } from "@/components/search-dialog";
 import { getNotes, deleteNote, updateNote, type Note } from "@/lib/api";
 import {
   DropdownMenu,
@@ -51,6 +52,7 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const [activeNote, setActiveNote] = useState<Note | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ["notes"],
@@ -134,15 +136,22 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
 
       {/* Quick actions */}
       <div className="px-2 flex flex-col gap-0.5 mb-4">
-        <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer">
+        <button
+          type="button"
+          onClick={() => setSearchOpen(true)}
+          className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer w-full text-left"
+        >
           <Search size={18} />
           <span>Search</span>
-        </div>
+        </button>
         <div className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded cursor-pointer">
           <Settings size={18} />
           <span>Settings</span>
         </div>
       </div>
+
+      {/* Search Dialog */}
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
 
       {/* Notes sections with DnD */}
       <DndContext
