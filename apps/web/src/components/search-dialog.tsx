@@ -69,6 +69,9 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   // Keyboard navigation
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      // Skip if IME composition is in progress (e.g., Japanese input)
+      if (e.nativeEvent.isComposing) return;
+
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
