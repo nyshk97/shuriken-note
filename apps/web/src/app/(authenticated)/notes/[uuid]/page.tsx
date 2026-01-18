@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, FileText, Globe, Archive } from "lucide-react";
 import { getNote, getNotes, updateNote, type Note } from "@/lib/api";
+import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 import { VditorEditor } from "@/components/editor";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { useSaveStatus } from "@/contexts/save-status-context";
@@ -48,10 +49,10 @@ export default function NoteEditorPage() {
           </p>
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={() => router.push(DEFAULT_LANDING_PATH)}
             className="text-sm text-[var(--workspace-accent)] hover:underline"
           >
-            Go back home
+            Create new note
           </button>
         </div>
       </div>

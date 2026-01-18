@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 
 // Routes that require authentication
 const protectedRoutes = ["/"];
@@ -7,7 +8,7 @@ const protectedRoutes = ["/"];
 // Routes that are public (no authentication required)
 const publicRoutes = ["/p"];
 
-// Routes that should redirect to home if already authenticated
+// Routes that should redirect to default landing if already authenticated
 const authRoutes = ["/login"];
 
 export function middleware(request: NextRequest) {
@@ -41,9 +42,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to home if accessing auth route while authenticated
+  // Redirect to default landing if accessing auth route while authenticated
   if (isAuthRoute && hasRefreshToken) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL(DEFAULT_LANDING_PATH, request.url));
+  }
+
+  // Redirect root to default landing page
+  if (pathname === "/" && hasRefreshToken) {
+    return NextResponse.redirect(new URL(DEFAULT_LANDING_PATH, request.url));
   }
 
   return NextResponse.next();

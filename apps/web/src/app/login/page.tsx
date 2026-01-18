@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { ApiClientError } from "@/lib/api/client";
+import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      const redirect = searchParams.get("redirect") || "/";
+      const redirect = searchParams.get("redirect") || DEFAULT_LANDING_PATH;
       router.push(redirect);
     } catch (err) {
       if (err instanceof ApiClientError) {
