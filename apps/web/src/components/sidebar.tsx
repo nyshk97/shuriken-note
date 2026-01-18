@@ -304,8 +304,22 @@ function NoteTreeItem({
   currentPath: string;
   sectionKey: Note["status"];
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // Check if any child is currently active
+  const hasActiveChild = node.children.some(
+    (child) => currentPath === `/notes/${child.id}`
+  );
+
   const hasChildren = node.children.length > 0;
+
+  // User's manual expand/collapse preference (only applies when no active child)
+  const [userExpanded, setUserExpanded] = useState(false);
+
+  // Always expand if a child is active, otherwise respect user's preference
+  const isExpanded = hasActiveChild || userExpanded;
+
+  const handleToggleExpand = () => {
+    setUserExpanded((prev) => !prev);
+  };
 
   return (
     <div>
@@ -314,7 +328,7 @@ function NoteTreeItem({
         isActive={currentPath === `/notes/${node.note.id}`}
         hasChildren={hasChildren}
         isExpanded={isExpanded}
-        onToggleExpand={() => setIsExpanded((prev) => !prev)}
+        onToggleExpand={handleToggleExpand}
         canAddChild={sectionKey !== "archived" && !node.note.parent_note_id}
       />
       {hasChildren && isExpanded && (
