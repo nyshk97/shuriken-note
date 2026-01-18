@@ -7,6 +7,21 @@ RSpec.describe 'Notes API', type: :request do
   let(:Authorization) { "Bearer #{JwtService.encode_access_token(user_id: user.id)}" }
 
   # Shared schemas
+  let(:image_schema) do
+    {
+      type: :object,
+      properties: {
+        id: { type: :integer },
+        signed_id: { type: :string },
+        filename: { type: :string },
+        content_type: { type: :string },
+        byte_size: { type: :integer },
+        url: { type: :string }
+      },
+      required: %w[id signed_id filename content_type byte_size url]
+    }
+  end
+
   let(:note_schema) do
     {
       type: :object,
@@ -15,10 +30,11 @@ RSpec.describe 'Notes API', type: :request do
         title: { type: :string, nullable: true },
         body: { type: :string, nullable: true },
         status: { type: :string, enum: %w[personal published archived] },
+        images: { type: :array, items: image_schema },
         created_at: { type: :string, format: 'date-time' },
         updated_at: { type: :string, format: 'date-time' }
       },
-      required: %w[id status created_at updated_at]
+      required: %w[id status images created_at updated_at]
     }
   end
 
@@ -48,10 +64,11 @@ RSpec.describe 'Notes API', type: :request do
                   title: { type: :string, nullable: true },
                   body: { type: :string, nullable: true },
                   status: { type: :string, enum: %w[personal published archived] },
+                  images: { type: :array },
                   created_at: { type: :string, format: 'date-time' },
                   updated_at: { type: :string, format: 'date-time' }
                 },
-                required: %w[id status created_at updated_at]
+                required: %w[id status images created_at updated_at]
               }
             }
           },
@@ -103,7 +120,8 @@ RSpec.describe 'Notes API', type: :request do
             properties: {
               title: { type: :string, example: 'My Note Title' },
               body: { type: :string, example: 'Note content here...' },
-              status: { type: :string, enum: %w[personal published archived], example: 'personal' }
+              status: { type: :string, enum: %w[personal published archived], example: 'personal' },
+              image_ids: { type: :array, items: { type: :string }, description: 'Array of blob signed_ids' }
             }
           }
         },
@@ -120,10 +138,11 @@ RSpec.describe 'Notes API', type: :request do
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
                 status: { type: :string, enum: %w[personal published archived] },
+                images: { type: :array },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id status created_at updated_at]
+              required: %w[id status images created_at updated_at]
             }
           },
           required: %w[note]
@@ -142,7 +161,8 @@ RSpec.describe 'Notes API', type: :request do
                 id: { type: :string, format: :uuid },
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
-                status: { type: :string, enum: %w[personal published archived] }
+                status: { type: :string, enum: %w[personal published archived] },
+                images: { type: :array }
               }
             }
           }
@@ -190,10 +210,11 @@ RSpec.describe 'Notes API', type: :request do
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
                 status: { type: :string, enum: %w[personal published archived] },
+                images: { type: :array },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id status created_at updated_at]
+              required: %w[id status images created_at updated_at]
             }
           },
           required: %w[note]
@@ -247,7 +268,8 @@ RSpec.describe 'Notes API', type: :request do
             properties: {
               title: { type: :string },
               body: { type: :string },
-              status: { type: :string, enum: %w[personal published archived] }
+              status: { type: :string, enum: %w[personal published archived] },
+              image_ids: { type: :array, items: { type: :string }, description: 'Array of blob signed_ids to attach' }
             }
           }
         },
@@ -264,10 +286,11 @@ RSpec.describe 'Notes API', type: :request do
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
                 status: { type: :string, enum: %w[personal published archived] },
+                images: { type: :array },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id status created_at updated_at]
+              required: %w[id status images created_at updated_at]
             }
           },
           required: %w[note]

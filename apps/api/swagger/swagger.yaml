@@ -215,6 +215,8 @@ paths:
                           - personal
                           - published
                           - archived
+                        images:
+                          type: array
                         created_at:
                           type: string
                           format: date-time
@@ -224,6 +226,7 @@ paths:
                       required:
                       - id
                       - status
+                      - images
                       - created_at
                       - updated_at
                 required:
@@ -268,6 +271,8 @@ paths:
                         - personal
                         - published
                         - archived
+                      images:
+                        type: array
                       created_at:
                         type: string
                         format: date-time
@@ -277,6 +282,7 @@ paths:
                     required:
                     - id
                     - status
+                    - images
                     - created_at
                     - updated_at
                 required:
@@ -315,6 +321,11 @@ paths:
                       - published
                       - archived
                       example: personal
+                    image_ids:
+                      type: array
+                      items:
+                        type: string
+                      description: Array of blob signed_ids
               required:
               - note
   "/notes/{id}":
@@ -359,6 +370,8 @@ paths:
                         - personal
                         - published
                         - archived
+                      images:
+                        type: array
                       created_at:
                         type: string
                         format: date-time
@@ -368,6 +381,7 @@ paths:
                     required:
                     - id
                     - status
+                    - images
                     - created_at
                     - updated_at
                 required:
@@ -418,6 +432,8 @@ paths:
                         - personal
                         - published
                         - archived
+                      images:
+                        type: array
                       created_at:
                         type: string
                         format: date-time
@@ -427,6 +443,7 @@ paths:
                     required:
                     - id
                     - status
+                    - images
                     - created_at
                     - updated_at
                 required:
@@ -468,6 +485,11 @@ paths:
                       - personal
                       - published
                       - archived
+                    image_ids:
+                      type: array
+                      items:
+                        type: string
+                      description: Array of blob signed_ids to attach
               required:
               - note
     delete:
