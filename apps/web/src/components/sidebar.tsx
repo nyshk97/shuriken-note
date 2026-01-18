@@ -73,7 +73,7 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ["notes"],
-    queryFn: () => getNotes({ sort: "-updated_at" }),
+    queryFn: () => getNotes({ sort: "-created_at" }),
   });
 
   // Mutation for updating note status
