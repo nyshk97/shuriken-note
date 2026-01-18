@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createNote, type Note } from "@/lib/api";
@@ -15,8 +15,9 @@ export default function NewNotePage() {
   const [body, setBody] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  // Get initial status from URL params
+  // Get initial status and parent from URL params
   const initialStatus = (searchParams.get("status") as Note["status"]) || "personal";
+  const parentNoteId = searchParams.get("parent") || undefined;
 
   // Track if content has been entered
   const hasContent = useMemo(
@@ -34,6 +35,7 @@ export default function NewNotePage() {
         title: title.trim(),
         body: body.trim(),
         status: initialStatus,
+        parent_note_id: parentNoteId,
       }),
     onSuccess: (note) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });

@@ -18,6 +18,8 @@ export interface Note {
   title: string;
   body: string;
   status: "personal" | "published" | "archived";
+  effective_status: "personal" | "published" | "archived";
+  parent_note_id: string | null;
   attachments: NoteAttachment[];
   created_at: string;
   updated_at: string;
@@ -27,6 +29,7 @@ export interface CreateNoteInput {
   title?: string;
   body?: string;
   status?: Note["status"];
+  parent_note_id?: string | null;
   attachment_ids?: string[]; // blob signed_ids
 }
 
@@ -34,6 +37,7 @@ export interface UpdateNoteInput {
   title?: string;
   body?: string;
   status?: Note["status"];
+  parent_note_id?: string | null;
   attachment_ids?: string[]; // blob signed_ids to attach
 }
 

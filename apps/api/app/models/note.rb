@@ -2,6 +2,8 @@
 
 class Note < ApplicationRecord
   belongs_to :user
+  belongs_to :parent, class_name: 'Note', foreign_key: :parent_note_id, optional: true, inverse_of: :children
+  has_many :children, class_name: 'Note', foreign_key: :parent_note_id, dependent: :destroy, inverse_of: :parent
   has_many_attached :attachments
 
   # Allowed file types (allowlist approach)
@@ -27,12 +29,37 @@ class Note < ApplicationRecord
 
   validates :status, presence: true
   validate :validate_attachments
+  validate :parent_must_not_have_parent
+  validate :parent_must_belong_to_same_user
+
+  # Returns the effective status considering parent inheritance
+  # - If self is archived, return archived (child can be independently archived)
+  # - If parent exists, inherit parent's effective_status
+  # - Otherwise, return own status
+  def effective_status
+    return 'archived' if archived?
+    return parent.effective_status if parent.present?
+
+    status
+  end
 
   def self.image_type?(content_type)
     ALLOWED_IMAGE_TYPES.include?(content_type)
   end
 
   private
+
+  def parent_must_not_have_parent
+    return unless parent.present? && parent.parent_note_id.present?
+
+    errors.add(:parent_note_id, 'cannot create grandchild notes (max depth is 2)')
+  end
+
+  def parent_must_belong_to_same_user
+    return unless parent.present? && parent.user_id != user_id
+
+    errors.add(:parent_note_id, 'must belong to the same user')
+  end
 
   def validate_attachments
     return unless attachments.attached?
