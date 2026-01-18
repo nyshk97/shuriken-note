@@ -177,6 +177,30 @@ function NoteEditor({ note }: { note: Note }) {
         className="w-full text-4xl font-bold bg-transparent border-none outline-none text-[var(--workspace-text-primary)] placeholder:text-[var(--workspace-text-tertiary)] mb-6"
       />
 
+      {/* Child notes section - only show for parent notes */}
+      {canAddChild && childNotes.length > 0 && (
+        <div className="mb-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-[var(--workspace-text-secondary)]">
+              Child notes
+            </h3>
+            <button
+              type="button"
+              onClick={handleAddChild}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded transition-colors"
+            >
+              <Plus size={14} />
+              Add child
+            </button>
+          </div>
+          <div className="space-y-1">
+            {childNotes.map((child) => (
+              <ChildNoteItem key={child.id} note={child} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Body editor */}
       <div className="flex-1 min-h-0">
         <VditorEditor
@@ -199,36 +223,6 @@ function NoteEditor({ note }: { note: Note }) {
         </kbd>
         <span className="ml-2">for formatting toolbar</span>
       </div>
-
-      {/* Child notes section - only show for parent notes */}
-      {canAddChild && (
-        <div className="mt-8 pt-6 border-t border-[var(--workspace-border)]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-[var(--workspace-text-secondary)]">
-              Child notes
-            </h3>
-            <button
-              type="button"
-              onClick={handleAddChild}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded transition-colors"
-            >
-              <Plus size={14} />
-              Add child
-            </button>
-          </div>
-          {childNotes.length > 0 ? (
-            <div className="space-y-1">
-              {childNotes.map((child) => (
-                <ChildNoteItem key={child.id} note={child} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-[var(--workspace-text-tertiary)]">
-              No child notes yet. Click &quot;Add child&quot; to create one.
-            </p>
-          )}
-        </div>
-      )}
 
       {/* Error display */}
       {saveError && (
