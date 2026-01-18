@@ -2,7 +2,7 @@
 
 class Note < ApplicationRecord
   belongs_to :user
-  has_many_attached :images # Named 'images' for legacy reasons, but supports all file types
+  has_many_attached :attachments
 
   # Allowed file types (allowlist approach)
   ALLOWED_IMAGE_TYPES = %w[image/jpeg image/png image/gif image/webp].freeze
@@ -26,7 +26,7 @@ class Note < ApplicationRecord
   }, default: :personal
 
   validates :status, presence: true
-  validate :validate_images
+  validate :validate_attachments
 
   def self.image_type?(content_type)
     ALLOWED_IMAGE_TYPES.include?(content_type)
@@ -34,16 +34,16 @@ class Note < ApplicationRecord
 
   private
 
-  def validate_images
-    return unless images.attached?
+  def validate_attachments
+    return unless attachments.attached?
 
-    images.each do |image|
-      unless ALLOWED_FILE_TYPES.include?(image.content_type)
-        errors.add(:images, "has unsupported file type: #{image.content_type}")
+    attachments.each do |attachment|
+      unless ALLOWED_FILE_TYPES.include?(attachment.content_type)
+        errors.add(:attachments, "has unsupported file type: #{attachment.content_type}")
       end
 
-      if image.blob.byte_size > MAX_FILE_SIZE
-        errors.add(:images, "must be less than #{MAX_FILE_SIZE / 1.megabyte}MB")
+      if attachment.blob.byte_size > MAX_FILE_SIZE
+        errors.add(:attachments, "must be less than #{MAX_FILE_SIZE / 1.megabyte}MB")
       end
     end
   end

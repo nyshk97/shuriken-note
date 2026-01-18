@@ -11,15 +11,15 @@ RSpec.describe Note do
 
   describe 'associations' do
     it { is_expected.to belong_to(:user) }
-    it { is_expected.to have_many_attached(:images) }
+    it { is_expected.to have_many_attached(:attachments) }
   end
 
-  describe 'image validations' do
+  describe 'attachment validations' do
     let(:note) { create(:note) }
 
     context 'with valid image types' do
       it 'accepts JPEG images' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('fake image data'),
           filename: 'test.jpg',
           content_type: 'image/jpeg'
@@ -28,7 +28,7 @@ RSpec.describe Note do
       end
 
       it 'accepts PNG images' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('fake image data'),
           filename: 'test.png',
           content_type: 'image/png'
@@ -37,7 +37,7 @@ RSpec.describe Note do
       end
 
       it 'accepts GIF images' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('fake image data'),
           filename: 'test.gif',
           content_type: 'image/gif'
@@ -46,7 +46,7 @@ RSpec.describe Note do
       end
 
       it 'accepts WebP images' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('fake image data'),
           filename: 'test.webp',
           content_type: 'image/webp'
@@ -57,7 +57,7 @@ RSpec.describe Note do
 
     context 'with valid document types' do
       it 'accepts PDF files' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('fake pdf data'),
           filename: 'test.pdf',
           content_type: 'application/pdf'
@@ -68,7 +68,7 @@ RSpec.describe Note do
 
     context 'with valid text types' do
       it 'accepts plain text files' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('plain text content'),
           filename: 'readme.txt',
           content_type: 'text/plain'
@@ -77,7 +77,7 @@ RSpec.describe Note do
       end
 
       it 'accepts CSV files' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('col1,col2\nval1,val2'),
           filename: 'data.csv',
           content_type: 'text/csv'
@@ -86,7 +86,7 @@ RSpec.describe Note do
       end
 
       it 'accepts JSON files' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('{"key": "value"}'),
           filename: 'data.json',
           content_type: 'application/json'
@@ -97,7 +97,7 @@ RSpec.describe Note do
 
     context 'with valid archive types' do
       it 'accepts ZIP files' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('fake zip data'),
           filename: 'archive.zip',
           content_type: 'application/zip'
@@ -108,23 +108,23 @@ RSpec.describe Note do
 
     context 'with invalid file types' do
       it 'rejects unsupported file types' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('fake binary data'),
           filename: 'unknown.bin',
           content_type: 'application/octet-stream'
         )
         expect(note).not_to be_valid
-        expect(note.errors[:images]).to include(/unsupported file type/)
+        expect(note.errors[:attachments]).to include(/unsupported file type/)
       end
 
       it 'rejects executable files' do
-        note.images.attach(
+        note.attachments.attach(
           io: StringIO.new('fake exe data'),
           filename: 'program.exe',
           content_type: 'application/x-msdownload'
         )
         expect(note).not_to be_valid
-        expect(note.errors[:images]).to include(/unsupported file type/)
+        expect(note.errors[:attachments]).to include(/unsupported file type/)
       end
     end
   end

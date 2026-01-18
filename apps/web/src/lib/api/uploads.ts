@@ -199,7 +199,7 @@ export async function detachFile(
   noteId: string,
   signedId: string
 ): Promise<void> {
-  await apiClient(`/notes/${noteId}/images/${signedId}`, {
+  await apiClient(`/notes/${noteId}/attachments/${signedId}`, {
     method: "DELETE",
   });
 }
