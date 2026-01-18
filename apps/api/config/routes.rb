@@ -16,7 +16,10 @@ Rails.application.routes.draw do
   get 'me', to: 'me#show'
 
   # Notes
-  resources :notes, only: %i[index show create update destroy]
+  resources :notes, only: %i[index show create update destroy] do
+    # Detach file attachment from note
+    delete 'images/:signed_id', to: 'notes#detach_image', as: :detach_image
+  end
 
   # Direct uploads for images (authenticated)
   post 'direct_uploads', to: 'direct_uploads#create'

@@ -13,6 +13,12 @@ export default function NewNotePage() {
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+
+  // #region agent log
+  useEffect(() => {
+    fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'new/page.tsx:render', message: 'NewNotePage rendered', data: { bodyLength: body.length, bodyPreview: body?.substring(0, 50) }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'E' }) }).catch(() => { });
+  });
+  // #endregion
   const [isCreating, setIsCreating] = useState(false);
 
   // Get initial status from URL params

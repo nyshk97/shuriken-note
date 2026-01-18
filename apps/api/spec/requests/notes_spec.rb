@@ -362,4 +362,72 @@ RSpec.describe 'Notes API', type: :request do
       end
     end
   end
+
+  path '/notes/{note_id}/images/{signed_id}' do
+    parameter name: :note_id, in: :path, type: :string, format: :uuid, description: 'Note ID'
+    parameter name: :signed_id, in: :path, type: :string, description: 'Attachment signed ID'
+
+    delete 'Detach an image from a note' do
+      tags 'Notes'
+      description 'Removes an attached file from a note'
+      security [ bearer_auth: [] ]
+
+      response '204', 'attachment detached' do
+        let(:note) { create(:note, user: user) }
+        let(:note_id) { note.id }
+        let(:signed_id) do
+          note.images.attach(
+            io: StringIO.new('fake image data'),
+            filename: 'test.jpg',
+            content_type: 'image/jpeg'
+          )
+          note.images.first.signed_id
+        end
+
+        run_test! do
+          expect(note.reload.images.count).to eq(0)
+        end
+      end
+
+      response '401', 'unauthorized' do
+        schema '$ref' => '#/components/schemas/error_response'
+
+        let(:Authorization) { 'Bearer invalid_token' }
+        let(:note_id) { SecureRandom.uuid }
+        let(:signed_id) { 'invalid_signed_id' }
+
+        run_test!
+      end
+
+      response '404', 'note not found' do
+        schema '$ref' => '#/components/schemas/error_response'
+
+        let(:note_id) { SecureRandom.uuid }
+        let(:signed_id) { 'invalid_signed_id' }
+
+        run_test!
+      end
+
+      response '404', 'attachment not found' do
+        schema '$ref' => '#/components/schemas/error_response'
+
+        let(:note) { create(:note, user: user) }
+        let(:note_id) { note.id }
+        let(:signed_id) { 'nonexistent_signed_id' }
+
+        run_test!
+      end
+
+      response '404', 'note belongs to another user' do
+        schema '$ref' => '#/components/schemas/error_response'
+
+        let(:other_user) { create(:user) }
+        let(:other_note) { create(:note, user: other_user) }
+        let(:note_id) { other_note.id }
+        let(:signed_id) { 'some_signed_id' }
+
+        run_test!
+      end
+    end
+  end
 end

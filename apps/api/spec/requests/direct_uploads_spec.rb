@@ -44,9 +44,9 @@ RSpec.describe 'Direct Uploads API', type: :request do
     end
 
     context 'with invalid content type' do
-      it 'returns unprocessable entity error' do
+      it 'returns unprocessable entity error for unsupported types' do
         params = valid_params.deep_dup
-        params[:blob][:content_type] = 'application/pdf'
+        params[:blob][:content_type] = 'application/octet-stream'
 
         post '/direct_uploads', params: params, headers: auth_headers, as: :json
 
@@ -100,6 +100,43 @@ RSpec.describe 'Direct Uploads API', type: :request do
 
           expect(response).to have_http_status(:created)
         end
+      end
+    end
+
+    context 'with allowed document types' do
+      it 'accepts PDF files' do
+        params = valid_params.deep_dup
+        params[:blob][:content_type] = 'application/pdf'
+        params[:blob][:filename] = 'document.pdf'
+
+        post '/direct_uploads', params: params, headers: auth_headers, as: :json
+
+        expect(response).to have_http_status(:created)
+      end
+    end
+
+    context 'with allowed text types' do
+      %w[text/plain text/csv application/json].each do |content_type|
+        it "accepts #{content_type}" do
+          params = valid_params.deep_dup
+          params[:blob][:content_type] = content_type
+
+          post '/direct_uploads', params: params, headers: auth_headers, as: :json
+
+          expect(response).to have_http_status(:created)
+        end
+      end
+    end
+
+    context 'with allowed archive types' do
+      it 'accepts ZIP files' do
+        params = valid_params.deep_dup
+        params[:blob][:content_type] = 'application/zip'
+        params[:blob][:filename] = 'archive.zip'
+
+        post '/direct_uploads', params: params, headers: auth_headers, as: :json
+
+        expect(response).to have_http_status(:created)
       end
     end
   end

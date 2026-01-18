@@ -12,4 +12,15 @@ export {
   type CreateNoteInput,
   type UpdateNoteInput,
 } from "./notes";
-export { uploadImage, getImageUrl, type UploadedImage } from "./uploads";
+export {
+  uploadFile,
+  uploadImage,
+  detachFile,
+  getFileUrl,
+  getImageUrl,
+  isImageType,
+  generateFileMarkdown,
+  getAllowedFileTypesAccept,
+  type UploadedFile,
+  type UploadedImage,
+} from "./uploads";

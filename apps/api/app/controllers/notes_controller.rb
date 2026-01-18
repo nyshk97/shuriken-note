@@ -52,6 +52,19 @@ class NotesController < ApplicationController
     head :no_content
   end
 
+  # DELETE /notes/:note_id/images/:signed_id
+  def detach_image
+    note = current_user.notes.find(params[:note_id])
+    attachment = note.images.find { |img| img.signed_id == params[:signed_id] }
+
+    if attachment
+      attachment.purge
+      head :no_content
+    else
+      render_error(code: 'not_found', message: 'Attachment not found', status: :not_found)
+    end
+  end
+
   private
 
   def note_params

@@ -55,15 +55,76 @@ RSpec.describe Note do
       end
     end
 
-    context 'with invalid image types' do
-      it 'rejects PDF files' do
+    context 'with valid document types' do
+      it 'accepts PDF files' do
         note.images.attach(
           io: StringIO.new('fake pdf data'),
           filename: 'test.pdf',
           content_type: 'application/pdf'
         )
+        expect(note).to be_valid
+      end
+    end
+
+    context 'with valid text types' do
+      it 'accepts plain text files' do
+        note.images.attach(
+          io: StringIO.new('plain text content'),
+          filename: 'readme.txt',
+          content_type: 'text/plain'
+        )
+        expect(note).to be_valid
+      end
+
+      it 'accepts CSV files' do
+        note.images.attach(
+          io: StringIO.new('col1,col2\nval1,val2'),
+          filename: 'data.csv',
+          content_type: 'text/csv'
+        )
+        expect(note).to be_valid
+      end
+
+      it 'accepts JSON files' do
+        note.images.attach(
+          io: StringIO.new('{"key": "value"}'),
+          filename: 'data.json',
+          content_type: 'application/json'
+        )
+        expect(note).to be_valid
+      end
+    end
+
+    context 'with valid archive types' do
+      it 'accepts ZIP files' do
+        note.images.attach(
+          io: StringIO.new('fake zip data'),
+          filename: 'archive.zip',
+          content_type: 'application/zip'
+        )
+        expect(note).to be_valid
+      end
+    end
+
+    context 'with invalid file types' do
+      it 'rejects unsupported file types' do
+        note.images.attach(
+          io: StringIO.new('fake binary data'),
+          filename: 'unknown.bin',
+          content_type: 'application/octet-stream'
+        )
         expect(note).not_to be_valid
-        expect(note.errors[:images]).to include(/must be JPEG, PNG, GIF, or WebP/)
+        expect(note.errors[:images]).to include(/unsupported file type/)
+      end
+
+      it 'rejects executable files' do
+        note.images.attach(
+          io: StringIO.new('fake exe data'),
+          filename: 'program.exe',
+          content_type: 'application/x-msdownload'
+        )
+        expect(note).not_to be_valid
+        expect(note.errors[:images]).to include(/unsupported file type/)
       end
     end
   end

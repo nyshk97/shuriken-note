@@ -5,7 +5,11 @@ import type Vditor from "vditor";
 import "vditor/dist/index.css";
 import { useFloatingToolbar } from "./use-floating-toolbar";
 import { FloatingToolbar, type ToolbarAction } from "./floating-toolbar";
-import { uploadImage } from "@/lib/api";
+import {
+  uploadFile,
+  generateFileMarkdown,
+  getAllowedFileTypesAccept,
+} from "@/lib/api";
 
 // URL detection regex
 const URL_REGEX = /^https?:\/\/[^\s]+$/;
@@ -29,7 +33,9 @@ export interface VditorEditorProps {
   className?: string;
   /** Auto-convert pasted URLs to Markdown links */
   autoLinkOnPaste?: boolean;
-  /** Callback when an image is uploaded, receives the blob signed_id */
+  /** Callback when a file is uploaded, receives the blob signed_id */
+  onFileUploaded?: (signedId: string) => void;
+  /** @deprecated Use onFileUploaded instead */
   onImageUploaded?: (signedId: string) => void;
 }
 
@@ -40,14 +46,50 @@ export function VditorEditor({
   height = 400,
   className,
   autoLinkOnPaste = true,
+  onFileUploaded,
   onImageUploaded,
 }: VditorEditorProps) {
+  // Support both onFileUploaded and legacy onImageUploaded
+  const handleFileUploadedCallback = onFileUploaded ?? onImageUploaded;
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Vditor | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const initialValueRef = useRef(value);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Store callbacks in refs to avoid useEffect re-runs
+  const uploadAndInsertFileRef = useRef<((file: File) => Promise<void>) | null>(null);
+  const handlePasteRef = useRef<((e: ClipboardEvent) => Promise<void>) | null>(null);
+  const handleInputRef = useRef<((value: string) => void) | null>(null);
+
+  // Upload a file and insert markdown at cursor position
+  const uploadAndInsertFile = useCallback(
+    async (file: File) => {
+      if (!editorRef.current) return;
+
+      setIsUploading(true);
+      try {
+        const uploaded = await uploadFile(file);
+        const markdown = generateFileMarkdown(uploaded);
+        editorRef.current.insertValue(markdown);
+        handleFileUploadedCallback?.(uploaded.signed_id);
+        editorRef.current.focus();
+      } catch (error) {
+        console.error("Failed to upload file:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Upload failed";
+        editorRef.current.insertValue(`<!-- Upload error: ${errorMessage} -->`);
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [handleFileUploadedCallback]
+  );
+
+  // Keep ref updated with latest callback
+  uploadAndInsertFileRef.current = uploadAndInsertFile;
 
   // Floating toolbar state
   const { isOpen, position, close } = useFloatingToolbar({
@@ -57,18 +99,55 @@ export function VditorEditor({
 
   const handleInput = useCallback(
     (newValue: string) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:handleInput', message: 'handleInput called', data: { newValue: newValue?.substring(0, 50) }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'D' }) }).catch(() => { });
+      // #endregion
       onChange?.(newValue);
     },
     [onChange]
   );
 
-  // Paste handler for auto-linking URLs
+  // Keep ref updated with latest callback
+  handleInputRef.current = handleInput;
+
+  // Paste handler for images and auto-linking URLs
   const handlePaste = useCallback(
-    (e: ClipboardEvent) => {
-      if (!autoLinkOnPaste || !editorRef.current) return;
+    async (e: ClipboardEvent) => {
+      if (!editorRef.current) return;
 
       const clipboardData = e.clipboardData;
       if (!clipboardData) return;
+
+      // Check for image files in clipboard (screenshots, copied images)
+      const items = clipboardData.items;
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const file = item.getAsFile();
+          if (file) {
+            // Use ref to get latest callback without causing re-renders
+            await uploadAndInsertFileRef.current?.(file);
+          }
+          return;
+        }
+      }
+
+      // Check for pasted files
+      const files = clipboardData.files;
+      if (files.length > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        for (const file of files) {
+          await uploadAndInsertFileRef.current?.(file);
+        }
+        return;
+      }
+
+      // Auto-link URLs
+      if (!autoLinkOnPaste) return;
 
       const pastedText = clipboardData.getData("text/plain");
       if (!pastedText) return;
@@ -83,18 +162,71 @@ export function VditorEditor({
         editorRef.current.insertValue(markdownLink);
       }
     },
-    [autoLinkOnPaste]
+    [autoLinkOnPaste] // Removed uploadAndInsertFile dependency - using ref instead
+  );
+
+  // Keep ref updated with latest callback
+  handlePasteRef.current = handlePaste;
+
+  // Drag and drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set isDragging to false if we're leaving the container entirely
+    const relatedTarget = e.relatedTarget as Node | null;
+    if (!containerRef.current?.contains(relatedTarget)) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      for (const file of files) {
+        await uploadAndInsertFile(file);
+      }
+    },
+    [uploadAndInsertFile]
   );
 
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:useEffect-init', message: 'Editor init useEffect triggered', data: { placeholder, height }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A', runId: 'post-fix-2' }) }).catch(() => { });
+    // #endregion
     if (!containerRef.current) return;
 
     let vditor: Vditor | null = null;
+    let isCancelled = false;
+
+    // Stable paste handler that delegates to ref
+    const stablePasteHandler = (e: ClipboardEvent) => {
+      handlePasteRef.current?.(e);
+    };
+
+    // Stable input handler that delegates to ref
+    const stableInputHandler = (value: string) => {
+      handleInputRef.current?.(value);
+    };
 
     const initEditor = async () => {
       const VditorClass = (await import("vditor")).default;
 
-      if (!containerRef.current) return;
+      // Prevent double initialization (React StrictMode)
+      if (!containerRef.current || isCancelled) return;
+
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:initEditor', message: 'Creating new Vditor instance', data: { initialValue: initialValueRef.current?.substring(0, 50), isCancelled }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A,C', runId: 'post-fix-2' }) }).catch(() => { });
+      // #endregion
 
       vditor = new VditorClass(containerRef.current, {
         mode: "ir", // Instant Rendering mode (Typora-like)
@@ -126,13 +258,17 @@ export function VditorEditor({
             autoSpace: true,
           },
         },
-        input: handleInput,
+        input: stableInputHandler,
         after: () => {
+          if (isCancelled) {
+            vditor?.destroy();
+            return;
+          }
           editorRef.current = vditor;
 
-          // Add paste event listener for auto-linking
-          if (autoLinkOnPaste && containerRef.current) {
-            containerRef.current.addEventListener("paste", handlePaste, true);
+          // Add paste event listener using stable handler
+          if (containerRef.current) {
+            containerRef.current.addEventListener("paste", stablePasteHandler, true);
           }
         },
       });
@@ -141,20 +277,27 @@ export function VditorEditor({
     initEditor();
 
     return () => {
+      isCancelled = true;
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:useEffect-cleanup', message: 'Editor cleanup triggered', data: {}, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A', runId: 'post-fix-2' }) }).catch(() => { });
+      // #endregion
       // Remove paste event listener
       if (containerRef.current) {
-        containerRef.current.removeEventListener("paste", handlePaste, true);
+        containerRef.current.removeEventListener("paste", stablePasteHandler, true);
       }
       if (vditor) {
         vditor.destroy();
         editorRef.current = null;
       }
     };
-  }, [placeholder, height, handleInput, autoLinkOnPaste, handlePaste]);
+  }, [placeholder, height]); // Removed handleInput - using ref instead
 
   // Update editor value when prop changes (external update)
   useEffect(() => {
     if (editorRef.current && value !== editorRef.current.getValue()) {
+      // #region agent log
+      fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:useEffect-setValue', message: 'setValue called due to value prop change', data: { propValue: value?.substring(0, 50), editorValue: editorRef.current.getValue()?.substring(0, 50) }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'B,D' }) }).catch(() => { });
+      // #endregion
       editorRef.current.setValue(value);
     }
   }, [value]);
@@ -163,34 +306,14 @@ export function VditorEditor({
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (!file || !editorRef.current) return;
+      if (!file) return;
 
       // Reset input so same file can be selected again
       e.target.value = "";
 
-      setIsUploading(true);
-      try {
-        const uploaded = await uploadImage(file);
-
-        // Insert Markdown image syntax
-        const markdown = `![${file.name}](${uploaded.url})`;
-        editorRef.current.insertValue(markdown);
-
-        // Notify parent of uploaded image
-        onImageUploaded?.(uploaded.signed_id);
-
-        editorRef.current.focus();
-      } catch (error) {
-        console.error("Failed to upload image:", error);
-        // Show error in editor as comment
-        const errorMessage =
-          error instanceof Error ? error.message : "Upload failed";
-        editorRef.current.insertValue(`<!-- Upload error: ${errorMessage} -->`);
-      } finally {
-        setIsUploading(false);
-      }
+      await uploadAndInsertFile(file);
     },
-    [onImageUploaded]
+    [uploadAndInsertFile]
   );
 
   // Handle toolbar actions
@@ -244,7 +367,12 @@ export function VditorEditor({
   }, []);
 
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <div ref={containerRef} className={className} lang="ja" />
       {isOpen && (
         <FloatingToolbar
@@ -254,18 +382,24 @@ export function VditorEditor({
           onClose={close}
         />
       )}
-      {/* Hidden file input for image upload */}
+      {/* Hidden file input for file upload */}
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp"
+        accept={getAllowedFileTypesAccept()}
         className="hidden"
         onChange={handleFileSelect}
         disabled={isUploading}
       />
+      {/* Drag overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded flex items-center justify-center z-10 pointer-events-none">
+          <div className="text-primary font-medium">Drop files here</div>
+        </div>
+      )}
       {/* Upload indicator */}
       {isUploading && (
-        <div className="absolute top-2 right-2 bg-background/80 px-3 py-1 rounded text-sm text-muted-foreground">
+        <div className="absolute top-2 right-2 bg-background/80 px-3 py-1 rounded text-sm text-muted-foreground z-20">
           Uploading...
         </div>
       )}
