@@ -81,11 +81,69 @@ export function VditorEditor({
         // Replace marker with actual markdown using setValue for proper IR mode preview
         // Add zero-width space after newlines so cursor can be placed after the image
         const currentValue = editorRef.current.getValue();
-        const newValue = currentValue.replace(marker, markdown + "\n\n\u200B");
+        const insertedContent = markdown + "\n\n\u200B";
+        const markerIndex = currentValue.indexOf(marker);
+        const newValue = currentValue.replace(marker, insertedContent);
+
+        // Access Vditor's internal IR element to save scroll position
+        const getIrElement = () => {
+          const vditorInstance = editorRef.current as Vditor & {
+            vditor?: { ir?: { element?: HTMLElement } };
+          } | null;
+          return vditorInstance?.vditor?.ir?.element;
+        };
+
+        // Save scroll position before setValue
+        const scrollTop = getIrElement()?.scrollTop || 0;
+
         editorRef.current.setValue(newValue);
 
+        // Restore scroll position and move cursor to after the inserted content
+        const cursorPosition = markerIndex + insertedContent.length;
+        setTimeout(() => {
+          if (!editorRef.current) return;
+
+          // Re-get IR element after setValue (DOM may have changed)
+          const irElement = getIrElement();
+
+          // Restore scroll position
+          if (irElement) {
+            irElement.scrollTop = scrollTop;
+
+            // Find the text node and position for cursor
+            const walker = document.createTreeWalker(
+              irElement,
+              NodeFilter.SHOW_TEXT,
+              null
+            );
+            let charCount = 0;
+            let targetNode: Text | null = null;
+            let targetOffset = 0;
+
+            while (walker.nextNode()) {
+              const node = walker.currentNode as Text;
+              const nodeLength = node.textContent?.length || 0;
+              if (charCount + nodeLength >= cursorPosition) {
+                targetNode = node;
+                targetOffset = cursorPosition - charCount;
+                break;
+              }
+              charCount += nodeLength;
+            }
+
+            if (targetNode) {
+              const range = document.createRange();
+              const sel = window.getSelection();
+              range.setStart(targetNode, Math.min(targetOffset, targetNode.length));
+              range.collapse(true);
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+            }
+          }
+          editorRef.current?.focus();
+        }, 10);
+
         handleFileUploadedCallback?.(uploaded.signed_id);
-        editorRef.current.focus();
       } catch (error) {
         console.error("Failed to upload file:", error);
         const errorMessage =
