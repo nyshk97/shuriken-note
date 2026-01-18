@@ -11,7 +11,109 @@ RSpec.describe Note do
 
   describe 'associations' do
     it { is_expected.to belong_to(:user) }
+    it { is_expected.to belong_to(:parent).class_name('Note').with_foreign_key(:parent_note_id).optional }
+    it { is_expected.to have_many(:children).class_name('Note').with_foreign_key(:parent_note_id).dependent(:destroy) }
     it { is_expected.to have_many_attached(:attachments) }
+  end
+
+  describe 'parent-child validations' do
+    let(:user) { create(:user) }
+    let(:parent_note) { create(:note, user: user) }
+
+    context 'when parent has no parent (valid child)' do
+      it 'allows creating a child note' do
+        child = build(:note, user: user, parent: parent_note)
+        expect(child).to be_valid
+      end
+    end
+
+    context 'when parent already has a parent (grandchild attempt)' do
+      let(:child_note) { create(:note, user: user, parent: parent_note) }
+
+      it 'rejects creating grandchild notes' do
+        grandchild = build(:note, user: user, parent: child_note)
+        expect(grandchild).not_to be_valid
+        expect(grandchild.errors[:parent_note_id]).to include('cannot create grandchild notes (max depth is 2)')
+      end
+    end
+
+    context 'when parent belongs to different user' do
+      let(:other_user) { create(:user) }
+      let(:other_note) { create(:note, user: other_user) }
+
+      it 'rejects parent from different user' do
+        child = build(:note, user: user, parent: other_note)
+        expect(child).not_to be_valid
+        expect(child.errors[:parent_note_id]).to include('must belong to the same user')
+      end
+    end
+  end
+
+  describe '#effective_status' do
+    let(:user) { create(:user) }
+
+    context 'when note has no parent' do
+      it 'returns own status for personal note' do
+        note = create(:note, user: user, status: :personal)
+        expect(note.effective_status).to eq('personal')
+      end
+
+      it 'returns own status for published note' do
+        note = create(:note, user: user, status: :published)
+        expect(note.effective_status).to eq('published')
+      end
+
+      it 'returns own status for archived note' do
+        note = create(:note, user: user, status: :archived)
+        expect(note.effective_status).to eq('archived')
+      end
+    end
+
+    context 'when note has parent' do
+      let(:parent_note) { create(:note, user: user, status: :published) }
+      let(:child_note) { create(:note, user: user, parent: parent_note, status: :personal) }
+
+      it 'inherits parent status when child is not archived' do
+        expect(child_note.effective_status).to eq('published')
+      end
+
+      it 'returns archived when child is archived regardless of parent' do
+        child_note.update!(status: :archived)
+        expect(child_note.effective_status).to eq('archived')
+      end
+
+      it 'returns archived when parent is archived' do
+        parent_note.update!(status: :archived)
+        expect(child_note.reload.effective_status).to eq('archived')
+      end
+    end
+
+    context 'when parent status changes' do
+      let(:parent_note) { create(:note, user: user, status: :personal) }
+      let(:child_note) { create(:note, user: user, parent: parent_note, status: :personal) }
+
+      it 'reflects parent status change in effective_status' do
+        expect(child_note.effective_status).to eq('personal')
+
+        parent_note.update!(status: :published)
+        expect(child_note.reload.effective_status).to eq('published')
+      end
+    end
+  end
+
+  describe 'cascade deletion' do
+    let(:user) { create(:user) }
+    let!(:parent_note) { create(:note, user: user) }
+    let!(:child_note) { create(:note, user: user, parent: parent_note) }
+
+    it 'deletes children when parent is destroyed' do
+      expect { parent_note.destroy }.to change(described_class, :count).by(-2)
+    end
+
+    it 'does not delete parent when child is destroyed' do
+      expect { child_note.destroy }.to change(described_class, :count).by(-1)
+      expect(parent_note.reload).to be_persisted
+    end
   end
 
   describe 'attachment validations' do

@@ -68,7 +68,7 @@ class NotesController < ApplicationController
   private
 
   def note_params
-    params.fetch(:note, {}).permit(:title, :body, :status, attachment_ids: [])
+    params.fetch(:note, {}).permit(:title, :body, :status, :parent_note_id, attachment_ids: [])
   end
 
   def note_attributes
@@ -89,6 +89,8 @@ class NotesController < ApplicationController
       title: note.title,
       body: note.body,
       status: note.status,
+      effective_status: note.effective_status,
+      parent_note_id: note.parent_note_id,
       attachments: note.attachments.map { |attachment| attachment_response(attachment) },
       created_at: note.created_at,
       updated_at: note.updated_at

@@ -16,5 +16,10 @@ FactoryBot.define do
     trait :untitled do
       title { '' }
     end
+
+    trait :with_parent do
+      association :parent, factory: :note
+      user { parent.user }
+    end
   end
 end

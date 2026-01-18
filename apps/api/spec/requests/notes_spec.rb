@@ -30,11 +30,13 @@ RSpec.describe 'Notes API', type: :request do
         title: { type: :string, nullable: true },
         body: { type: :string, nullable: true },
         status: { type: :string, enum: %w[personal published archived] },
+        effective_status: { type: :string, enum: %w[personal published archived] },
+        parent_note_id: { type: :string, format: :uuid, nullable: true },
         attachments: { type: :array, items: attachment_schema },
         created_at: { type: :string, format: 'date-time' },
         updated_at: { type: :string, format: 'date-time' }
       },
-      required: %w[id status attachments created_at updated_at]
+      required: %w[id status effective_status attachments created_at updated_at]
     }
   end
 
@@ -381,6 +383,7 @@ RSpec.describe 'Notes API', type: :request do
             content_type: 'image/jpeg'
           )
           n.reload
+          n
         end
         let(:note_id) { note_with_attachment.id }
         let(:signed_id) { note_with_attachment.attachments.first.signed_id }
@@ -428,6 +431,103 @@ RSpec.describe 'Notes API', type: :request do
         let(:signed_id) { 'some_signed_id' }
 
         run_test!
+      end
+    end
+  end
+
+  # Parent-child note relationship tests
+  describe 'Parent-child notes' do
+    let(:auth_header) { { 'Authorization' => "Bearer #{JwtService.encode_access_token(user_id: user.id)}" } }
+
+    describe 'POST /notes with parent_note_id' do
+      let(:parent_note) { create(:note, user: user) }
+
+      it 'creates a child note successfully' do
+        post '/notes',
+             params: { note: { title: 'Child Note', parent_note_id: parent_note.id } },
+             headers: auth_header
+
+        expect(response).to have_http_status(:created)
+        json = response.parsed_body
+        expect(json['note']['parent_note_id']).to eq(parent_note.id)
+      end
+
+      it 'rejects grandchild notes' do
+        child_note = create(:note, user: user, parent: parent_note)
+
+        post '/notes',
+             params: { note: { title: 'Grandchild Note', parent_note_id: child_note.id } },
+             headers: auth_header
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it 'rejects parent from different user' do
+        other_user = create(:user)
+        other_note = create(:note, user: other_user)
+
+        post '/notes',
+             params: { note: { title: 'Child Note', parent_note_id: other_note.id } },
+             headers: auth_header
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
+
+    describe 'GET /notes response includes parent info' do
+      let!(:parent_note) { create(:note, user: user, status: :published) }
+      let!(:child_note) { create(:note, user: user, parent: parent_note, status: :personal) }
+
+      it 'returns parent_note_id and effective_status' do
+        get "/notes/#{child_note.id}",
+            headers: auth_header
+
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['note']['parent_note_id']).to eq(parent_note.id)
+        expect(json['note']['effective_status']).to eq('published')
+        expect(json['note']['status']).to eq('personal')
+      end
+    end
+
+    describe 'PATCH /notes/:id with parent_note_id' do
+      let(:note) { create(:note, user: user) }
+      let(:parent_note) { create(:note, user: user) }
+
+      it 'sets parent for existing note' do
+        patch "/notes/#{note.id}",
+              params: { note: { parent_note_id: parent_note.id } },
+              headers: auth_header
+
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['note']['parent_note_id']).to eq(parent_note.id)
+      end
+
+      it 'removes parent when setting to null' do
+        child_note = create(:note, user: user, parent: parent_note)
+
+        patch "/notes/#{child_note.id}",
+              params: { note: { parent_note_id: nil } },
+              headers: auth_header
+
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['note']['parent_note_id']).to be_nil
+      end
+    end
+
+    describe 'DELETE /notes/:id cascade deletion' do
+      let!(:parent_note) { create(:note, user: user) }
+      let!(:child_note) { create(:note, user: user, parent: parent_note) }
+
+      it 'deletes children when parent is deleted' do
+        expect {
+          delete "/notes/#{parent_note.id}",
+                 headers: auth_header
+        }.to change(Note, :count).by(-2)
+
+        expect(response).to have_http_status(:no_content)
       end
     end
   end
