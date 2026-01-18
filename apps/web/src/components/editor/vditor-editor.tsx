@@ -71,13 +71,17 @@ export function VditorEditor({
 
       setIsUploading(true);
       try {
+        // Insert a unique marker at current cursor position before upload
+        const marker = `__UPLOAD_${Date.now()}__`;
+        editorRef.current.insertValue(marker);
+
         const uploaded = await uploadFile(file);
         const markdown = generateFileMarkdown(uploaded);
 
-        // Use setValue instead of insertValue to ensure proper IR mode preview update
+        // Replace marker with actual markdown using setValue for proper IR mode preview
         // Add zero-width space after newlines so cursor can be placed after the image
         const currentValue = editorRef.current.getValue();
-        const newValue = currentValue + "\n\n" + markdown + "\n\n\u200B";
+        const newValue = currentValue.replace(marker, markdown + "\n\n\u200B");
         editorRef.current.setValue(newValue);
 
         handleFileUploadedCallback?.(uploaded.signed_id);
@@ -86,6 +90,12 @@ export function VditorEditor({
         console.error("Failed to upload file:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Upload failed";
+        // Clean up marker if it exists
+        const currentValue = editorRef.current.getValue();
+        const cleanedValue = currentValue.replace(/__UPLOAD_\d+__/g, "");
+        if (cleanedValue !== currentValue) {
+          editorRef.current.setValue(cleanedValue);
+        }
         editorRef.current.insertValue(`<!-- Upload error: ${errorMessage} -->`);
       } finally {
         setIsUploading(false);
