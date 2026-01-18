@@ -5,7 +5,7 @@ class Note < ApplicationRecord
   has_many_attached :images
 
   ALLOWED_IMAGE_TYPES = %w[image/jpeg image/png image/gif image/webp].freeze
-  MAX_IMAGE_SIZE = 10.megabytes
+  MAX_IMAGE_SIZE = 30.megabytes
 
   enum :status, {
     personal: 'personal',

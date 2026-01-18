@@ -94,10 +94,10 @@ export async function uploadImage(file: File): Promise<UploadedImage> {
     );
   }
 
-  // Validate file size (10MB max)
-  const maxSize = 10 * 1024 * 1024;
+  // Validate file size (30MB max)
+  const maxSize = 30 * 1024 * 1024;
   if (file.size > maxSize) {
-    throw new Error(`File too large. Maximum size is 10MB.`);
+    throw new Error(`File too large. Maximum size is 30MB.`);
   }
 
   // Step 1: Get direct upload URL
