@@ -11,6 +11,61 @@ RSpec.describe Note do
 
   describe 'associations' do
     it { is_expected.to belong_to(:user) }
+    it { is_expected.to have_many_attached(:images) }
+  end
+
+  describe 'image validations' do
+    let(:note) { create(:note) }
+
+    context 'with valid image types' do
+      it 'accepts JPEG images' do
+        note.images.attach(
+          io: StringIO.new('fake image data'),
+          filename: 'test.jpg',
+          content_type: 'image/jpeg'
+        )
+        expect(note).to be_valid
+      end
+
+      it 'accepts PNG images' do
+        note.images.attach(
+          io: StringIO.new('fake image data'),
+          filename: 'test.png',
+          content_type: 'image/png'
+        )
+        expect(note).to be_valid
+      end
+
+      it 'accepts GIF images' do
+        note.images.attach(
+          io: StringIO.new('fake image data'),
+          filename: 'test.gif',
+          content_type: 'image/gif'
+        )
+        expect(note).to be_valid
+      end
+
+      it 'accepts WebP images' do
+        note.images.attach(
+          io: StringIO.new('fake image data'),
+          filename: 'test.webp',
+          content_type: 'image/webp'
+        )
+        expect(note).to be_valid
+      end
+    end
+
+    context 'with invalid image types' do
+      it 'rejects PDF files' do
+        note.images.attach(
+          io: StringIO.new('fake pdf data'),
+          filename: 'test.pdf',
+          content_type: 'application/pdf'
+        )
+        expect(note).not_to be_valid
+        expect(note.errors[:images]).to include(/must be JPEG, PNG, GIF, or WebP/)
+      end
+    end
   end
 
   describe 'enums' do

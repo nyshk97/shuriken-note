@@ -1,11 +1,21 @@
 import { apiClient } from "./client";
 
 // Types
+export interface NoteImage {
+  id: number;
+  signed_id: string;
+  filename: string;
+  content_type: string;
+  byte_size: number;
+  url: string;
+}
+
 export interface Note {
   id: string; // UUID
   title: string;
   body: string;
   status: "personal" | "published" | "archived";
+  images: NoteImage[];
   created_at: string;
   updated_at: string;
 }
@@ -14,12 +24,14 @@ export interface CreateNoteInput {
   title?: string;
   body?: string;
   status?: Note["status"];
+  image_ids?: string[]; // blob signed_ids
 }
 
 export interface UpdateNoteInput {
   title?: string;
   body?: string;
   status?: Note["status"];
+  image_ids?: string[]; // blob signed_ids to attach
 }
 
 // API Response types

@@ -8,6 +8,8 @@ export {
   updateNote,
   deleteNote,
   type Note,
+  type NoteImage,
   type CreateNoteInput,
   type UpdateNoteInput,
 } from "./notes";
+export { uploadImage, getImageUrl, type UploadedImage } from "./uploads";
