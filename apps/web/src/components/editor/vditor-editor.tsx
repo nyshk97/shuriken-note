@@ -75,8 +75,9 @@ export function VditorEditor({
         const markdown = generateFileMarkdown(uploaded);
 
         // Use setValue instead of insertValue to ensure proper IR mode preview update
+        // Add zero-width space after newlines so cursor can be placed after the image
         const currentValue = editorRef.current.getValue();
-        const newValue = currentValue + "\n\n" + markdown;
+        const newValue = currentValue + "\n\n" + markdown + "\n\n\u200B";
         editorRef.current.setValue(newValue);
 
         handleFileUploadedCallback?.(uploaded.signed_id);
