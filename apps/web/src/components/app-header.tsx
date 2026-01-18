@@ -15,8 +15,10 @@ import {
   Trash2,
   LogOut,
   ExternalLink,
+  FilePlus,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useCreateNote } from "@/hooks/use-create-note";
 import { getNote, updateNote, deleteNote, type Note } from "@/lib/api";
 import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 import { useSaveStatus } from "@/contexts/save-status-context";
@@ -24,6 +26,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -61,6 +64,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
   const queryClient = useQueryClient();
   const { user, logout } = useAuth();
   const { status: saveStatus } = useSaveStatus();
+  const createNoteMutation = useCreateNote();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -221,6 +225,21 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {/* Add child note - only for non-child, non-archived notes */}
+                {!note.parent_note_id && note.effective_status !== "archived" && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => createNoteMutation.mutate({
+                        status: note.effective_status === "published" ? "published" : "personal",
+                        parent_note_id: note.id,
+                      })}
+                    >
+                      <FilePlus size={16} className="mr-2" />
+                      Add child note
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem
                   onClick={handleDelete}
                   className="text-red-400 focus:text-red-400"

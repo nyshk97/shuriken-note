@@ -134,7 +134,12 @@ export async function apiClient<T>(
       return retryResponse.json();
     }
 
-    // Refresh failed, throw the original error
+    // Refresh failed - redirect to login
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+
+    // Still throw the error for proper error handling
     const errorData = await response.json();
     throw new ApiClientError(response.status, errorData);
   }
