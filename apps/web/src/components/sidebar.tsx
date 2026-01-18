@@ -27,6 +27,7 @@ import {
   MoreHorizontal,
   Trash2,
   FilePlus,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
@@ -95,14 +96,32 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
   );
 
   // Build tree structure: group notes by effective_status and organize parent-child
+  // Favorited notes appear at the top, sorted by created_at descending
   const sections = useMemo(() => {
+    const sortByFavoriteAndCreated = (a: Note, b: Note): number => {
+      // Both favorited: sort by created_at descending
+      if (a.favorited_at && b.favorited_at) {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      // Only a is favorited: a comes first
+      if (a.favorited_at) return -1;
+      // Only b is favorited: b comes first
+      if (b.favorited_at) return 1;
+      // Neither favorited: sort by created_at descending
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    };
+
     const buildTree = (sectionNotes: Note[]): NoteTreeNode[] => {
-      const parentNotes = sectionNotes.filter((n) => !n.parent_note_id);
+      const parentNotes = sectionNotes
+        .filter((n) => !n.parent_note_id)
+        .sort(sortByFavoriteAndCreated);
       const childNotes = sectionNotes.filter((n) => n.parent_note_id);
 
       return parentNotes.map((parent) => ({
         note: parent,
-        children: childNotes.filter((child) => child.parent_note_id === parent.id),
+        children: childNotes
+          .filter((child) => child.parent_note_id === parent.id)
+          .sort(sortByFavoriteAndCreated),
       }));
     };
 
@@ -427,6 +446,8 @@ function NoteItemContent({
   const createNoteMutation = useCreateNote();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const isFavorited = !!note.favorited_at;
+
   const deleteMutation = useMutation({
     mutationFn: () => deleteNote(note.id),
     onSuccess: () => {
@@ -434,6 +455,15 @@ function NoteItemContent({
       if (isActive) {
         router.push(DEFAULT_LANDING_PATH);
       }
+    },
+  });
+
+  const favoriteMutation = useMutation({
+    mutationFn: (favorited: boolean) =>
+      updateNote(note.id, { favorited_at: favorited ? new Date().toISOString() : null }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["note", note.id] });
     },
   });
 
@@ -456,6 +486,13 @@ function NoteItemContent({
       status: note.effective_status === "published" ? "published" : "personal",
       parent_note_id: note.id,
     });
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuOpen(false);
+    favoriteMutation.mutate(!isFavorited);
   };
 
   const getIcon = () => {
@@ -504,6 +541,9 @@ function NoteItemContent({
       >
         {getIcon()}
         <span className="truncate flex-1">{note.title || "Untitled"}</span>
+        {isFavorited && (
+          <Star size={14} className="flex-shrink-0 fill-yellow-500 text-yellow-500" />
+        )}
       </Link>
 
       {/* Context menu trigger */}
@@ -529,8 +569,23 @@ function NoteItemContent({
             side="right"
             className="w-48 bg-[var(--workspace-sidebar)] border-[var(--workspace-border)]"
           >
+            {/* Favorite toggle - not available for archived notes */}
+            {note.effective_status !== "archived" && (
+              <DropdownMenuItem
+                onClick={handleToggleFavorite}
+                disabled={favoriteMutation.isPending}
+                className="cursor-pointer"
+              >
+                <Star
+                  size={16}
+                  className={`mr-2 ${isFavorited ? "fill-yellow-500 text-yellow-500" : ""}`}
+                />
+                {isFavorited ? "Remove from favorites" : "Add to favorites"}
+              </DropdownMenuItem>
+            )}
             {canAddChild && (
               <>
+                {note.effective_status !== "archived" && <DropdownMenuSeparator />}
                 <DropdownMenuItem
                   onClick={handleAddChild}
                   className="cursor-pointer"
@@ -538,9 +593,9 @@ function NoteItemContent({
                   <FilePlus size={16} className="mr-2" />
                   Add child note
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
               </>
             )}
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleDelete}
               disabled={deleteMutation.isPending}

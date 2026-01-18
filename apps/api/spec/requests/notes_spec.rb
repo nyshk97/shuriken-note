@@ -531,4 +531,86 @@ RSpec.describe 'Notes API', type: :request do
       end
     end
   end
+
+  # Favorite notes tests
+  describe 'Favorite notes' do
+    let(:auth_header) { { 'Authorization' => "Bearer #{JwtService.encode_access_token(user_id: user.id)}" } }
+
+    describe 'PATCH /notes/:id with favorited_at' do
+      let(:note) { create(:note, user: user) }
+      let(:favorite_time) { Time.current.iso8601 }
+
+      it 'sets favorited_at to favorite a note' do
+        patch "/notes/#{note.id}",
+              params: { note: { favorited_at: favorite_time } },
+              headers: auth_header
+
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['note']['favorited_at']).to be_present
+      end
+
+      it 'clears favorited_at to unfavorite a note' do
+        favorited_note = create(:note, user: user, favorited_at: Time.current)
+
+        patch "/notes/#{favorited_note.id}",
+              params: { note: { favorited_at: nil } },
+              headers: auth_header
+
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['note']['favorited_at']).to be_nil
+      end
+
+      it 'auto-clears favorited_at when archiving a note' do
+        favorited_note = create(:note, user: user, favorited_at: Time.current)
+
+        patch "/notes/#{favorited_note.id}",
+              params: { note: { status: 'archived' } },
+              headers: auth_header
+
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['note']['status']).to eq('archived')
+        expect(json['note']['favorited_at']).to be_nil
+      end
+
+      it 'allows favoriting child notes independently' do
+        parent_note = create(:note, user: user)
+        child_note = create(:note, user: user, parent: parent_note)
+
+        patch "/notes/#{child_note.id}",
+              params: { note: { favorited_at: favorite_time } },
+              headers: auth_header
+
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['note']['favorited_at']).to be_present
+        expect(parent_note.reload.favorited_at).to be_nil
+      end
+    end
+
+    describe 'GET /notes response includes favorited_at' do
+      let!(:favorited_note) { create(:note, user: user, favorited_at: Time.current) }
+      let!(:normal_note) { create(:note, user: user) }
+
+      it 'returns favorited_at in note response' do
+        get "/notes/#{favorited_note.id}",
+            headers: auth_header
+
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['note']['favorited_at']).to be_present
+      end
+
+      it 'returns null favorited_at for non-favorited note' do
+        get "/notes/#{normal_note.id}",
+            headers: auth_header
+
+        expect(response).to have_http_status(:ok)
+        json = response.parsed_body
+        expect(json['note']['favorited_at']).to be_nil
+      end
+    end
+  end
 end

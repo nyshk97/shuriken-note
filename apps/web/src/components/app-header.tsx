@@ -97,6 +97,22 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
     },
   });
 
+  // Favorite toggle mutation
+  const favoriteMutation = useMutation({
+    mutationFn: (favorited: boolean) =>
+      updateNote(noteId!, { favorited_at: favorited ? new Date().toISOString() : null }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["note", noteId] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
+
+  const isFavorited = !!note?.favorited_at;
+
+  function handleToggleFavorite() {
+    favoriteMutation.mutate(!isFavorited);
+  }
+
   async function handleLogout() {
     setIsLoggingOut(true);
     try {
@@ -205,14 +221,21 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
               Edited {formatRelativeTime(note.updated_at)}
             </span>
 
-            {/* Star button (placeholder) */}
-            <button
-              type="button"
-              className="p-1 hover:bg-[var(--workspace-hover)] rounded transition-colors"
-              title="Add to favorites"
-            >
-              <Star size={16} />
-            </button>
+            {/* Star button - toggle favorite (not available for archived notes) */}
+            {note.effective_status !== "archived" && (
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                disabled={favoriteMutation.isPending}
+                className="p-1 hover:bg-[var(--workspace-hover)] rounded transition-colors disabled:opacity-50"
+                title={isFavorited ? "Remove from favorites" : "Add to favorites"}
+              >
+                <Star
+                  size={16}
+                  className={isFavorited ? "fill-yellow-500 text-yellow-500" : ""}
+                />
+              </button>
+            )}
 
             {/* More options */}
             <DropdownMenu>

@@ -215,7 +215,7 @@ paths:
                           - personal
                           - published
                           - archived
-                        images:
+                        attachments:
                           type: array
                         created_at:
                           type: string
@@ -226,7 +226,7 @@ paths:
                       required:
                       - id
                       - status
-                      - images
+                      - attachments
                       - created_at
                       - updated_at
                 required:
@@ -271,7 +271,7 @@ paths:
                         - personal
                         - published
                         - archived
-                      images:
+                      attachments:
                         type: array
                       created_at:
                         type: string
@@ -282,7 +282,7 @@ paths:
                     required:
                     - id
                     - status
-                    - images
+                    - attachments
                     - created_at
                     - updated_at
                 required:
@@ -321,7 +321,7 @@ paths:
                       - published
                       - archived
                       example: personal
-                    image_ids:
+                    attachment_ids:
                       type: array
                       items:
                         type: string
@@ -370,7 +370,7 @@ paths:
                         - personal
                         - published
                         - archived
-                      images:
+                      attachments:
                         type: array
                       created_at:
                         type: string
@@ -381,7 +381,7 @@ paths:
                     required:
                     - id
                     - status
-                    - images
+                    - attachments
                     - created_at
                     - updated_at
                 required:
@@ -432,7 +432,7 @@ paths:
                         - personal
                         - published
                         - archived
-                      images:
+                      attachments:
                         type: array
                       created_at:
                         type: string
@@ -443,7 +443,7 @@ paths:
                     required:
                     - id
                     - status
-                    - images
+                    - attachments
                     - created_at
                     - updated_at
                 required:
@@ -485,7 +485,7 @@ paths:
                       - personal
                       - published
                       - archived
-                    image_ids:
+                    attachment_ids:
                       type: array
                       items:
                         type: string
@@ -506,6 +506,35 @@ paths:
           description: unauthorized
         '404':
           description: note not found
+  "/notes/{note_id}/attachments/{signed_id}":
+    parameters:
+    - name: note_id
+      in: path
+      format: uuid
+      description: Note ID
+      required: true
+      schema:
+        type: string
+    - name: signed_id
+      in: path
+      description: Attachment signed ID
+      required: true
+      schema:
+        type: string
+    delete:
+      summary: Detach an attachment from a note
+      tags:
+      - Notes
+      description: Removes an attached file from a note
+      security:
+      - bearer_auth: []
+      responses:
+        '204':
+          description: attachment detached
+        '401':
+          description: unauthorized
+        '404':
+          description: note belongs to another user
   "/p/{id}":
     parameters:
     - name: id

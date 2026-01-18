@@ -20,6 +20,7 @@ export interface Note {
   status: "personal" | "published" | "archived";
   effective_status: "personal" | "published" | "archived";
   parent_note_id: string | null;
+  favorited_at: string | null;
   attachments: NoteAttachment[];
   created_at: string;
   updated_at: string;
@@ -38,6 +39,7 @@ export interface UpdateNoteInput {
   body?: string;
   status?: Note["status"];
   parent_note_id?: string | null;
+  favorited_at?: string | null;
   attachment_ids?: string[]; // blob signed_ids to attach
 }
 
