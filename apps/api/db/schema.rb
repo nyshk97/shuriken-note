@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_18_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_19_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_bigm"
   enable_extension "pg_catalog.plpgsql"
@@ -47,6 +47,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_18_200000) do
   create_table "notes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.text "body", default: "", null: false
     t.datetime "created_at", null: false
+    t.datetime "favorited_at"
     t.uuid "parent_note_id"
     t.string "status", default: "personal", null: false
     t.string "title", default: "", null: false

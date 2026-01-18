@@ -32,6 +32,8 @@ class Note < ApplicationRecord
   validate :parent_must_not_have_parent
   validate :parent_must_belong_to_same_user
 
+  before_save :clear_favorite_on_archive
+
   # Returns the effective status considering parent inheritance
   # - If self is archived, return archived (child can be independently archived)
   # - If parent exists, inherit parent's effective_status
@@ -73,6 +75,10 @@ class Note < ApplicationRecord
         errors.add(:attachments, "must be less than #{MAX_FILE_SIZE / 1.megabyte}MB")
       end
     end
+  end
+
+  def clear_favorite_on_archive
+    self.favorited_at = nil if status_changed? && archived?
   end
 
   # Full-text search using pg_bigm
