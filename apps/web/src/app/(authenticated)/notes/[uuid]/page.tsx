@@ -2,11 +2,14 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getNote, updateNote, type Note } from "@/lib/api";
+import { Plus, FileText, Globe, Archive } from "lucide-react";
+import { getNote, getNotes, updateNote, type Note } from "@/lib/api";
 import { VditorEditor } from "@/components/editor";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { useSaveStatus } from "@/contexts/save-status-context";
+import { useCreateNote } from "@/hooks/use-create-note";
 
 export default function NoteEditorPage() {
   const params = useParams();
@@ -62,10 +65,33 @@ export default function NoteEditorPage() {
 function NoteEditor({ note }: { note: Note }) {
   const queryClient = useQueryClient();
   const { setStatus } = useSaveStatus();
+  const createNoteMutation = useCreateNote();
 
   // Initialize with note values - this runs once per mount
   const [title, setTitle] = useState(note.title);
   const [body, setBody] = useState(note.body);
+
+  // Fetch child notes if this is a parent note (no parent_note_id)
+  const { data: allNotes = [] } = useQuery({
+    queryKey: ["notes"],
+    queryFn: () => getNotes({ sort: "-updated_at" }),
+  });
+
+  // Filter children of this note
+  const childNotes = useMemo(
+    () => allNotes.filter((n) => n.parent_note_id === note.id),
+    [allNotes, note.id]
+  );
+
+  // Can add child if: not archived and not already a child note
+  const canAddChild = note.effective_status !== "archived" && !note.parent_note_id;
+
+  const handleAddChild = () => {
+    createNoteMutation.mutate({
+      status: note.effective_status === "published" ? "published" : "personal",
+      parent_note_id: note.id,
+    });
+  };
 
   // Track newly uploaded files that need to be attached to this note
   const [pendingAttachmentIds, setPendingAttachmentIds] = useState<string[]>([]);
@@ -173,6 +199,36 @@ function NoteEditor({ note }: { note: Note }) {
         <span className="ml-2">for formatting toolbar</span>
       </div>
 
+      {/* Child notes section - only show for parent notes */}
+      {canAddChild && (
+        <div className="mt-8 pt-6 border-t border-[var(--workspace-border)]">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-[var(--workspace-text-secondary)]">
+              Child notes
+            </h3>
+            <button
+              type="button"
+              onClick={handleAddChild}
+              className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded transition-colors"
+            >
+              <Plus size={14} />
+              Add child
+            </button>
+          </div>
+          {childNotes.length > 0 ? (
+            <div className="space-y-1">
+              {childNotes.map((child) => (
+                <ChildNoteItem key={child.id} note={child} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--workspace-text-tertiary)]">
+              No child notes yet. Click &quot;Add child&quot; to create one.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Error display */}
       {saveError && (
         <div className="mt-4 p-3 rounded-md bg-red-500/10 text-red-500 text-sm">
@@ -180,5 +236,24 @@ function NoteEditor({ note }: { note: Note }) {
         </div>
       )}
     </div>
+  );
+}
+
+// Child note item component
+function ChildNoteItem({ note }: { note: Note }) {
+  const getIcon = () => {
+    if (note.effective_status === "published") return <Globe size={16} />;
+    if (note.effective_status === "archived") return <Archive size={16} />;
+    return <FileText size={16} />;
+  };
+
+  return (
+    <Link
+      href={`/notes/${note.id}`}
+      className="flex items-center gap-2 px-3 py-2 text-sm rounded-md bg-[var(--workspace-hover)]/50 hover:bg-[var(--workspace-hover)] text-[var(--workspace-text-secondary)] transition-colors"
+    >
+      {getIcon()}
+      <span className="truncate">{note.title || "Untitled"}</span>
+    </Link>
   );
 }

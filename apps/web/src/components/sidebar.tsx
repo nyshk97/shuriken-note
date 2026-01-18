@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/core";
 import {
   ChevronRight,
+  ChevronDown,
   Search,
   Settings,
   Globe,
@@ -25,6 +26,7 @@ import {
   Plus,
   MoreHorizontal,
   Trash2,
+  FilePlus,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
@@ -34,14 +36,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type NoteSection = {
-  key: Note["status"];
-  label: string;
-  notes: Note[];
-};
+// Helper to build tree structure
+interface NoteTreeNode {
+  note: Note;
+  children: Note[];
+}
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -90,24 +93,29 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
     })
   );
 
-  // Group notes by status
-  const sections: NoteSection[] = [
-    {
-      key: "personal",
-      label: "Private",
-      notes: notes.filter((n) => n.status === "personal"),
-    },
-    {
-      key: "published",
-      label: "Public",
-      notes: notes.filter((n) => n.status === "published"),
-    },
-    {
-      key: "archived",
-      label: "Archived",
-      notes: notes.filter((n) => n.status === "archived"),
-    },
-  ];
+  // Build tree structure: group notes by effective_status and organize parent-child
+  const sections = useMemo(() => {
+    const buildTree = (sectionNotes: Note[]): NoteTreeNode[] => {
+      const parentNotes = sectionNotes.filter((n) => !n.parent_note_id);
+      const childNotes = sectionNotes.filter((n) => n.parent_note_id);
+
+      return parentNotes.map((parent) => ({
+        note: parent,
+        children: childNotes.filter((child) => child.parent_note_id === parent.id),
+      }));
+    };
+
+    // Use effective_status for grouping (inherits from parent)
+    const personalNotes = notes.filter((n) => n.effective_status === "personal");
+    const publishedNotes = notes.filter((n) => n.effective_status === "published");
+    const archivedNotes = notes.filter((n) => n.effective_status === "archived");
+
+    return [
+      { key: "personal" as const, label: "Private", tree: buildTree(personalNotes) },
+      { key: "published" as const, label: "Public", tree: buildTree(publishedNotes) },
+      { key: "archived" as const, label: "Archived", tree: buildTree(archivedNotes) },
+    ];
+  }, [notes]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const note = notes.find((n) => n.id === event.active.id);
@@ -186,7 +194,7 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
                 key={section.key}
                 sectionKey={section.key}
                 label={section.label}
-                notes={section.notes}
+                tree={section.tree}
                 currentPath={pathname}
                 defaultExpanded={section.key !== "archived"}
                 showNewButton={section.key !== "archived"}
@@ -218,14 +226,14 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
 function NoteSectionComponent({
   sectionKey,
   label,
-  notes,
+  tree,
   currentPath,
   defaultExpanded = true,
   showNewButton = false,
 }: {
   sectionKey: Note["status"];
   label: string;
-  notes: Note[];
+  tree: NoteTreeNode[];
   currentPath: string;
   defaultExpanded?: boolean;
   showNewButton?: boolean;
@@ -261,11 +269,12 @@ function NoteSectionComponent({
       </button>
       {isExpanded && (
         <div className={`mt-0.5 space-y-0.5 transition-colors ${isOver ? "bg-[var(--workspace-accent)]/10 rounded" : ""}`}>
-          {notes.map((note) => (
-            <DraggableNoteItem
-              key={note.id}
-              note={note}
-              isActive={currentPath === `/notes/${note.id}`}
+          {tree.map((node) => (
+            <NoteTreeItem
+              key={node.note.id}
+              node={node}
+              currentPath={currentPath}
+              sectionKey={sectionKey}
             />
           ))}
           {showNewButton && (
@@ -285,7 +294,62 @@ function NoteSectionComponent({
   );
 }
 
-function DraggableNoteItem({ note, isActive }: { note: Note; isActive: boolean }) {
+// Tree item component for parent notes with children
+function NoteTreeItem({
+  node,
+  currentPath,
+  sectionKey,
+}: {
+  node: NoteTreeNode;
+  currentPath: string;
+  sectionKey: Note["status"];
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const hasChildren = node.children.length > 0;
+
+  return (
+    <div>
+      <DraggableNoteItem
+        note={node.note}
+        isActive={currentPath === `/notes/${node.note.id}`}
+        hasChildren={hasChildren}
+        isExpanded={isExpanded}
+        onToggleExpand={() => setIsExpanded((prev) => !prev)}
+        canAddChild={sectionKey !== "archived" && !node.note.parent_note_id}
+      />
+      {hasChildren && isExpanded && (
+        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-[var(--workspace-border)]">
+          {node.children.map((child) => (
+            <DraggableNoteItem
+              key={child.id}
+              note={child}
+              isActive={currentPath === `/notes/${child.id}`}
+              isChild
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DraggableNoteItem({
+  note,
+  isActive,
+  hasChildren = false,
+  isExpanded = false,
+  onToggleExpand,
+  canAddChild = false,
+  isChild = false,
+}: {
+  note: Note;
+  isActive: boolean;
+  hasChildren?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  canAddChild?: boolean;
+  isChild?: boolean;
+}) {
   const {
     attributes,
     listeners,
@@ -310,7 +374,16 @@ function DraggableNoteItem({ note, isActive }: { note: Note; isActive: boolean }
       {...listeners}
       {...attributes}
     >
-      <NoteItemContent note={note} isActive={isActive} isDragging={isDragging} />
+      <NoteItemContent
+        note={note}
+        isActive={isActive}
+        isDragging={isDragging}
+        hasChildren={hasChildren}
+        isExpanded={isExpanded}
+        onToggleExpand={onToggleExpand}
+        canAddChild={canAddChild}
+        isChild={isChild}
+      />
     </div>
   );
 }
@@ -319,13 +392,24 @@ function NoteItemContent({
   note,
   isActive,
   isDragging = false,
+  hasChildren = false,
+  isExpanded = false,
+  onToggleExpand,
+  canAddChild = false,
+  isChild = false,
 }: {
   note: Note;
   isActive: boolean;
   isDragging?: boolean;
+  hasChildren?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+  canAddChild?: boolean;
+  isChild?: boolean;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const createNoteMutation = useCreateNote();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const deleteMutation = useMutation({
@@ -341,35 +425,69 @@ function NoteItemContent({
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm("Are you sure you want to delete this note?")) {
+    const message = hasChildren
+      ? "Are you sure you want to delete this note and all its child notes?"
+      : "Are you sure you want to delete this note?";
+    if (confirm(message)) {
       deleteMutation.mutate();
     }
   };
 
+  const handleAddChild = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuOpen(false);
+    createNoteMutation.mutate({
+      status: note.effective_status === "published" ? "published" : "personal",
+      parent_note_id: note.id,
+    });
+  };
+
+  const getIcon = () => {
+    if (note.effective_status === "published") return <Globe size={18} />;
+    if (note.effective_status === "archived") return <Archive size={18} />;
+    return <FileText size={18} />;
+  };
+
   return (
-    <div className="group/item relative">
+    <div className="group/item relative flex items-center">
+      {/* Expand/collapse toggle for parent notes with children */}
+      {hasChildren ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleExpand?.();
+          }}
+          className="p-0.5 rounded hover:bg-[var(--workspace-hover)] flex-shrink-0"
+        >
+          {isExpanded ? (
+            <ChevronDown size={14} className="text-[var(--workspace-text-tertiary)]" />
+          ) : (
+            <ChevronRight size={14} className="text-[var(--workspace-text-tertiary)]" />
+          )}
+        </button>
+      ) : (
+        <div className="w-[18px] flex-shrink-0" />
+      )}
+
       <Link
         href={`/notes/${note.id}`}
-        className={`flex items-center gap-2 px-3 py-1 text-sm rounded transition-colors ${isDragging
+        className={`flex items-center gap-2 px-2 py-1 text-sm rounded transition-colors flex-1 min-w-0 ${isDragging
           ? "cursor-grabbing"
           : "cursor-pointer"
           } ${isActive
             ? "bg-[var(--workspace-active)] text-[var(--workspace-text-primary)]"
             : "text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)]"
-          }`}
+          } ${isChild ? "pl-2" : ""}`}
         onClick={(e) => {
           if (isDragging) {
             e.preventDefault();
           }
         }}
       >
-        {note.status === "published" ? (
-          <Globe size={18} />
-        ) : note.status === "archived" ? (
-          <Archive size={18} />
-        ) : (
-          <FileText size={18} />
-        )}
+        {getIcon()}
         <span className="truncate flex-1">{note.title || "Untitled"}</span>
       </Link>
 
@@ -396,6 +514,18 @@ function NoteItemContent({
             side="right"
             className="w-48 bg-[var(--workspace-sidebar)] border-[var(--workspace-border)]"
           >
+            {canAddChild && (
+              <>
+                <DropdownMenuItem
+                  onClick={handleAddChild}
+                  className="cursor-pointer"
+                >
+                  <FilePlus size={16} className="mr-2" />
+                  Add child note
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
