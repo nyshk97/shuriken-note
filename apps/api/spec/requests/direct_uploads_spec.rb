@@ -59,7 +59,7 @@ RSpec.describe 'Direct Uploads API', type: :request do
     context 'with file size exceeding limit' do
       it 'returns unprocessable entity error' do
         params = valid_params.deep_dup
-        params[:blob][:byte_size] = 11 * 1024 * 1024 # 11MB
+        params[:blob][:byte_size] = 31 * 1024 * 1024 # 31MB (exceeds 30MB limit)
 
         post '/direct_uploads', params: params, headers: auth_headers, as: :json
 
