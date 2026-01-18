@@ -99,7 +99,7 @@ export default async function PublicNotePage({ params }: PageProps) {
 
         {/* Content */}
         <main>
-          <MarkdownViewer content={note.body || ""} />
+          <MarkdownViewer content={note.body || ""} variant="public" />
         </main>
 
         {/* Footer */}
