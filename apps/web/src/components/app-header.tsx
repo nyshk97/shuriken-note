@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { getNote, updateNote, deleteNote, type Note } from "@/lib/api";
+import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 import { useSaveStatus } from "@/contexts/save-status-context";
 import {
   DropdownMenu,
@@ -88,7 +89,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
     mutationFn: () => deleteNote(noteId!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      router.push("/");
+      router.push(DEFAULT_LANDING_PATH);
     },
   });
 

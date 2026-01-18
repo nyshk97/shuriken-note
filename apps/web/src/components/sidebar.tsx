@@ -32,6 +32,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
 import { SearchDialog } from "@/components/search-dialog";
 import { getNotes, deleteNote, updateNote, type Note } from "@/lib/api";
+import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -431,7 +432,7 @@ function NoteItemContent({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       if (isActive) {
-        router.push("/");
+        router.push(DEFAULT_LANDING_PATH);
       }
     },
   });
