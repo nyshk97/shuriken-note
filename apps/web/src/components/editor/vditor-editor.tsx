@@ -73,7 +73,12 @@ export function VditorEditor({
       try {
         const uploaded = await uploadFile(file);
         const markdown = generateFileMarkdown(uploaded);
-        editorRef.current.insertValue(markdown);
+
+        // Use setValue instead of insertValue to ensure proper IR mode preview update
+        const currentValue = editorRef.current.getValue();
+        const newValue = currentValue + "\n\n" + markdown;
+        editorRef.current.setValue(newValue);
+
         handleFileUploadedCallback?.(uploaded.signed_id);
         editorRef.current.focus();
       } catch (error) {
@@ -99,9 +104,6 @@ export function VditorEditor({
 
   const handleInput = useCallback(
     (newValue: string) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:handleInput', message: 'handleInput called', data: { newValue: newValue?.substring(0, 50) }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'D' }) }).catch(() => { });
-      // #endregion
       onChange?.(newValue);
     },
     [onChange]
@@ -200,9 +202,6 @@ export function VditorEditor({
   );
 
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:useEffect-init', message: 'Editor init useEffect triggered', data: { placeholder, height }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A', runId: 'post-fix-2' }) }).catch(() => { });
-    // #endregion
     if (!containerRef.current) return;
 
     let vditor: Vditor | null = null;
@@ -223,10 +222,6 @@ export function VditorEditor({
 
       // Prevent double initialization (React StrictMode)
       if (!containerRef.current || isCancelled) return;
-
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:initEditor', message: 'Creating new Vditor instance', data: { initialValue: initialValueRef.current?.substring(0, 50), isCancelled }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A,C', runId: 'post-fix-2' }) }).catch(() => { });
-      // #endregion
 
       vditor = new VditorClass(containerRef.current, {
         mode: "ir", // Instant Rendering mode (Typora-like)
@@ -278,9 +273,6 @@ export function VditorEditor({
 
     return () => {
       isCancelled = true;
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:useEffect-cleanup', message: 'Editor cleanup triggered', data: {}, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A', runId: 'post-fix-2' }) }).catch(() => { });
-      // #endregion
       // Remove paste event listener
       if (containerRef.current) {
         containerRef.current.removeEventListener("paste", stablePasteHandler, true);
@@ -295,9 +287,6 @@ export function VditorEditor({
   // Update editor value when prop changes (external update)
   useEffect(() => {
     if (editorRef.current && value !== editorRef.current.getValue()) {
-      // #region agent log
-      fetch('http://127.0.0.1:7243/ingest/752089b4-f884-414a-9d2e-40082b87b892', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'vditor-editor.tsx:useEffect-setValue', message: 'setValue called due to value prop change', data: { propValue: value?.substring(0, 50), editorValue: editorRef.current.getValue()?.substring(0, 50) }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'B,D' }) }).catch(() => { });
-      // #endregion
       editorRef.current.setValue(value);
     }
   }, [value]);

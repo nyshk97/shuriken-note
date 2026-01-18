@@ -373,19 +373,20 @@ RSpec.describe 'Notes API', type: :request do
       security [ bearer_auth: [] ]
 
       response '204', 'attachment detached' do
-        let(:note) { create(:note, user: user) }
-        let(:note_id) { note.id }
-        let(:signed_id) do
-          note.images.attach(
+        let!(:note_with_image) do
+          n = create(:note, user: user)
+          n.images.attach(
             io: StringIO.new('fake image data'),
             filename: 'test.jpg',
             content_type: 'image/jpeg'
           )
-          note.images.first.signed_id
+          n
         end
+        let(:note_id) { note_with_image.id }
+        let(:signed_id) { note_with_image.images.first.signed_id }
 
         run_test! do
-          expect(note.reload.images.count).to eq(0)
+          expect(note_with_image.reload.images.count).to eq(0)
         end
       end
 
