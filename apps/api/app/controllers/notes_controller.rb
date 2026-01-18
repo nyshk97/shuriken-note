@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class NotesController < ApplicationController
+  include Rails.application.routes.url_helpers
+
   before_action :authenticate!
 
   ALLOWED_SORT_FIELDS = %w[created_at updated_at].freeze
@@ -8,19 +10,20 @@ class NotesController < ApplicationController
 
   # GET /notes
   def index
-    notes = current_user.notes.search(params[:q]).order(sort_order)
+    notes = current_user.notes.with_attached_images.search(params[:q]).order(sort_order)
     render json: { notes: notes.map { |note| note_response(note) } }
   end
 
   # GET /notes/:id
   def show
-    note = current_user.notes.find(params[:id])
+    note = current_user.notes.with_attached_images.find(params[:id])
     render json: { note: note_response(note) }
   end
 
   # POST /notes
   def create
-    note = current_user.notes.build(note_params)
+    note = current_user.notes.build(note_attributes)
+    attach_images(note)
 
     if note.save
       render json: { note: note_response(note) }, status: :created
@@ -32,8 +35,10 @@ class NotesController < ApplicationController
   # PATCH /notes/:id
   def update
     note = current_user.notes.find(params[:id])
+    note.assign_attributes(note_attributes)
+    attach_images(note)
 
-    if note.update(note_params)
+    if note.save
       render json: { note: note_response(note) }
     else
       render_validation_error(note)
@@ -50,7 +55,19 @@ class NotesController < ApplicationController
   private
 
   def note_params
-    params.fetch(:note, {}).permit(:title, :body, :status)
+    params.fetch(:note, {}).permit(:title, :body, :status, image_ids: [])
+  end
+
+  def note_attributes
+    note_params.except(:image_ids)
+  end
+
+  def attach_images(note)
+    image_ids = note_params[:image_ids]
+    return if image_ids.blank?
+
+    # image_ids are blob signed_ids from Direct Upload
+    note.images.attach(image_ids)
   end
 
   def note_response(note)
@@ -59,8 +76,20 @@ class NotesController < ApplicationController
       title: note.title,
       body: note.body,
       status: note.status,
+      images: note.images.map { |image| image_response(image) },
       created_at: note.created_at,
       updated_at: note.updated_at
+    }
+  end
+
+  def image_response(image)
+    {
+      id: image.id,
+      signed_id: image.signed_id,
+      filename: image.filename.to_s,
+      content_type: image.content_type,
+      byte_size: image.byte_size,
+      url: url_for(image)
     }
   end
 

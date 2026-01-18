@@ -67,10 +67,21 @@ function NoteEditor({ note }: { note: Note }) {
   const [title, setTitle] = useState(note.title);
   const [body, setBody] = useState(note.body);
 
+  // Track newly uploaded images that need to be attached to this note
+  const [pendingImageIds, setPendingImageIds] = useState<string[]>([]);
+
+  // Handle new image upload
+  const handleImageUploaded = (signedId: string) => {
+    setPendingImageIds((prev) => [...prev, signedId]);
+  };
+
   // Memoize data objects for auto-save comparison
-  const currentData = useMemo(() => ({ title, body }), [title, body]);
+  const currentData = useMemo(
+    () => ({ title, body, image_ids: pendingImageIds }),
+    [title, body, pendingImageIds]
+  );
   const originalData = useMemo(
-    () => ({ title: note.title, body: note.body }),
+    () => ({ title: note.title, body: note.body, image_ids: [] as string[] }),
     [note.title, note.body]
   );
 
@@ -83,6 +94,10 @@ function NoteEditor({ note }: { note: Note }) {
       // Update cache on successful save
       queryClient.setQueryData(["note", note.id], updatedNote);
       queryClient.invalidateQueries({ queryKey: ["notes"] });
+      // Clear pending images after successful save
+      if (data.image_ids && data.image_ids.length > 0) {
+        setPendingImageIds([]);
+      }
     },
     delay: 1000,
   });
@@ -142,6 +157,7 @@ function NoteEditor({ note }: { note: Note }) {
           onChange={setBody}
           placeholder="Start writing..."
           className="note-editor"
+          onImageUploaded={handleImageUploaded}
         />
       </div>
 

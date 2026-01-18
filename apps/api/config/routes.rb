@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   # Notes
   resources :notes, only: %i[index show create update destroy]
 
+  # Direct uploads for images (authenticated)
+  post 'direct_uploads', to: 'direct_uploads#create'
+
   # Public notes (no authentication required)
   get 'p/:id', to: 'public_notes#show', as: :public_note
 end

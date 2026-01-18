@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import type Vditor from "vditor";
 import "vditor/dist/index.css";
 import { useFloatingToolbar } from "./use-floating-toolbar";
 import { FloatingToolbar, type ToolbarAction } from "./floating-toolbar";
+import { uploadImage } from "@/lib/api";
 
 // URL detection regex
 const URL_REGEX = /^https?:\/\/[^\s]+$/;
@@ -28,6 +29,8 @@ export interface VditorEditorProps {
   className?: string;
   /** Auto-convert pasted URLs to Markdown links */
   autoLinkOnPaste?: boolean;
+  /** Callback when an image is uploaded, receives the blob signed_id */
+  onImageUploaded?: (signedId: string) => void;
 }
 
 export function VditorEditor({
@@ -37,11 +40,14 @@ export function VditorEditor({
   height = 400,
   className,
   autoLinkOnPaste = true,
+  onImageUploaded,
 }: VditorEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Vditor | null>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const initialValueRef = useRef(value);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Floating toolbar state
   const { isOpen, position, close } = useFloatingToolbar({
@@ -153,6 +159,40 @@ export function VditorEditor({
     }
   }, [value]);
 
+  // Handle file selection for upload
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !editorRef.current) return;
+
+      // Reset input so same file can be selected again
+      e.target.value = "";
+
+      setIsUploading(true);
+      try {
+        const uploaded = await uploadImage(file);
+
+        // Insert Markdown image syntax
+        const markdown = `![${file.name}](${uploaded.url})`;
+        editorRef.current.insertValue(markdown);
+
+        // Notify parent of uploaded image
+        onImageUploaded?.(uploaded.signed_id);
+
+        editorRef.current.focus();
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+        // Show error in editor as comment
+        const errorMessage =
+          error instanceof Error ? error.message : "Upload failed";
+        editorRef.current.insertValue(`<!-- Upload error: ${errorMessage} -->`);
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [onImageUploaded]
+  );
+
   // Handle toolbar actions
   const handleToolbarAction = useCallback((action: ToolbarAction) => {
     if (!editorRef.current) return;
@@ -191,15 +231,16 @@ export function VditorEditor({
         break;
       }
       case "upload": {
-        // TODO: Implement file upload
-        // For now, just insert a placeholder
-        editorRef.current.insertValue("![](image-url)");
+        // Open file picker
+        fileInputRef.current?.click();
         break;
       }
     }
 
-    // Focus back to editor
-    editorRef.current.focus();
+    // Focus back to editor (except for upload which opens file picker)
+    if (action !== "upload") {
+      editorRef.current.focus();
+    }
   }, []);
 
   return (
@@ -212,6 +253,21 @@ export function VditorEditor({
           onAction={handleToolbarAction}
           onClose={close}
         />
+      )}
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        className="hidden"
+        onChange={handleFileSelect}
+        disabled={isUploading}
+      />
+      {/* Upload indicator */}
+      {isUploading && (
+        <div className="absolute top-2 right-2 bg-background/80 px-3 py-1 rounded text-sm text-muted-foreground">
+          Uploading...
+        </div>
       )}
     </div>
   );
