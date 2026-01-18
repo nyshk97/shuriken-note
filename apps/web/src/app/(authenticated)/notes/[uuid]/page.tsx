@@ -67,21 +67,21 @@ function NoteEditor({ note }: { note: Note }) {
   const [title, setTitle] = useState(note.title);
   const [body, setBody] = useState(note.body);
 
-  // Track newly uploaded images that need to be attached to this note
-  const [pendingImageIds, setPendingImageIds] = useState<string[]>([]);
+  // Track newly uploaded files that need to be attached to this note
+  const [pendingAttachmentIds, setPendingAttachmentIds] = useState<string[]>([]);
 
-  // Handle new image upload
-  const handleImageUploaded = (signedId: string) => {
-    setPendingImageIds((prev) => [...prev, signedId]);
+  // Handle new file upload
+  const handleFileUploaded = (signedId: string) => {
+    setPendingAttachmentIds((prev) => [...prev, signedId]);
   };
 
   // Memoize data objects for auto-save comparison
   const currentData = useMemo(
-    () => ({ title, body, image_ids: pendingImageIds }),
-    [title, body, pendingImageIds]
+    () => ({ title, body, attachment_ids: pendingAttachmentIds }),
+    [title, body, pendingAttachmentIds]
   );
   const originalData = useMemo(
-    () => ({ title: note.title, body: note.body, image_ids: [] as string[] }),
+    () => ({ title: note.title, body: note.body, attachment_ids: [] as string[] }),
     [note.title, note.body]
   );
 
@@ -94,9 +94,9 @@ function NoteEditor({ note }: { note: Note }) {
       // Update cache on successful save
       queryClient.setQueryData(["note", note.id], updatedNote);
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      // Clear pending images after successful save
-      if (data.image_ids && data.image_ids.length > 0) {
-        setPendingImageIds([]);
+      // Clear pending attachments after successful save
+      if (data.attachment_ids && data.attachment_ids.length > 0) {
+        setPendingAttachmentIds([]);
       }
     },
     delay: 1000,
@@ -157,7 +157,7 @@ function NoteEditor({ note }: { note: Note }) {
           onChange={setBody}
           placeholder="Start writing..."
           className="note-editor"
-          onImageUploaded={handleImageUploaded}
+          onFileUploaded={handleFileUploaded}
         />
       </div>
 

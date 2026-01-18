@@ -7,7 +7,7 @@ RSpec.describe 'Notes API', type: :request do
   let(:Authorization) { "Bearer #{JwtService.encode_access_token(user_id: user.id)}" }
 
   # Shared schemas
-  let(:image_schema) do
+  let(:attachment_schema) do
     {
       type: :object,
       properties: {
@@ -30,11 +30,11 @@ RSpec.describe 'Notes API', type: :request do
         title: { type: :string, nullable: true },
         body: { type: :string, nullable: true },
         status: { type: :string, enum: %w[personal published archived] },
-        images: { type: :array, items: image_schema },
+        attachments: { type: :array, items: attachment_schema },
         created_at: { type: :string, format: 'date-time' },
         updated_at: { type: :string, format: 'date-time' }
       },
-      required: %w[id status images created_at updated_at]
+      required: %w[id status attachments created_at updated_at]
     }
   end
 
@@ -64,11 +64,11 @@ RSpec.describe 'Notes API', type: :request do
                   title: { type: :string, nullable: true },
                   body: { type: :string, nullable: true },
                   status: { type: :string, enum: %w[personal published archived] },
-                  images: { type: :array },
+                  attachments: { type: :array },
                   created_at: { type: :string, format: 'date-time' },
                   updated_at: { type: :string, format: 'date-time' }
                 },
-                required: %w[id status images created_at updated_at]
+                required: %w[id status attachments created_at updated_at]
               }
             }
           },
@@ -121,7 +121,7 @@ RSpec.describe 'Notes API', type: :request do
               title: { type: :string, example: 'My Note Title' },
               body: { type: :string, example: 'Note content here...' },
               status: { type: :string, enum: %w[personal published archived], example: 'personal' },
-              image_ids: { type: :array, items: { type: :string }, description: 'Array of blob signed_ids' }
+              attachment_ids: { type: :array, items: { type: :string }, description: 'Array of blob signed_ids' }
             }
           }
         },
@@ -138,11 +138,11 @@ RSpec.describe 'Notes API', type: :request do
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
                 status: { type: :string, enum: %w[personal published archived] },
-                images: { type: :array },
+                attachments: { type: :array },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id status images created_at updated_at]
+              required: %w[id status attachments created_at updated_at]
             }
           },
           required: %w[note]
@@ -162,7 +162,7 @@ RSpec.describe 'Notes API', type: :request do
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
                 status: { type: :string, enum: %w[personal published archived] },
-                images: { type: :array }
+                attachments: { type: :array }
               }
             }
           }
@@ -210,11 +210,11 @@ RSpec.describe 'Notes API', type: :request do
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
                 status: { type: :string, enum: %w[personal published archived] },
-                images: { type: :array },
+                attachments: { type: :array },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id status images created_at updated_at]
+              required: %w[id status attachments created_at updated_at]
             }
           },
           required: %w[note]
@@ -269,7 +269,7 @@ RSpec.describe 'Notes API', type: :request do
               title: { type: :string },
               body: { type: :string },
               status: { type: :string, enum: %w[personal published archived] },
-              image_ids: { type: :array, items: { type: :string }, description: 'Array of blob signed_ids to attach' }
+              attachment_ids: { type: :array, items: { type: :string }, description: 'Array of blob signed_ids to attach' }
             }
           }
         },
@@ -286,11 +286,11 @@ RSpec.describe 'Notes API', type: :request do
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
                 status: { type: :string, enum: %w[personal published archived] },
-                images: { type: :array },
+                attachments: { type: :array },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id status images created_at updated_at]
+              required: %w[id status attachments created_at updated_at]
             }
           },
           required: %w[note]
@@ -357,6 +357,75 @@ RSpec.describe 'Notes API', type: :request do
         schema '$ref' => '#/components/schemas/error_response'
 
         let(:id) { SecureRandom.uuid }
+
+        run_test!
+      end
+    end
+  end
+
+  path '/notes/{note_id}/attachments/{signed_id}' do
+    parameter name: :note_id, in: :path, type: :string, format: :uuid, description: 'Note ID'
+    parameter name: :signed_id, in: :path, type: :string, description: 'Attachment signed ID'
+
+    delete 'Detach an attachment from a note' do
+      tags 'Notes'
+      description 'Removes an attached file from a note'
+      security [ bearer_auth: [] ]
+
+      response '204', 'attachment detached' do
+        let!(:note_with_attachment) do
+          n = create(:note, user: user)
+          n.attachments.attach(
+            io: StringIO.new('fake file data'),
+            filename: 'test.jpg',
+            content_type: 'image/jpeg'
+          )
+          n.reload
+        end
+        let(:note_id) { note_with_attachment.id }
+        let(:signed_id) { note_with_attachment.attachments.first.signed_id }
+
+        run_test! do
+          expect(note_with_attachment.reload.attachments.count).to eq(0)
+        end
+      end
+
+      response '401', 'unauthorized' do
+        schema '$ref' => '#/components/schemas/error_response'
+
+        let(:Authorization) { 'Bearer invalid_token' }
+        let(:note_id) { SecureRandom.uuid }
+        let(:signed_id) { 'invalid_signed_id' }
+
+        run_test!
+      end
+
+      response '404', 'note not found' do
+        schema '$ref' => '#/components/schemas/error_response'
+
+        let(:note_id) { SecureRandom.uuid }
+        let(:signed_id) { 'invalid_signed_id' }
+
+        run_test!
+      end
+
+      response '404', 'attachment not found' do
+        schema '$ref' => '#/components/schemas/error_response'
+
+        let(:note) { create(:note, user: user) }
+        let(:note_id) { note.id }
+        let(:signed_id) { 'nonexistent_signed_id' }
+
+        run_test!
+      end
+
+      response '404', 'note belongs to another user' do
+        schema '$ref' => '#/components/schemas/error_response'
+
+        let(:other_user) { create(:user) }
+        let(:other_note) { create(:note, user: other_user) }
+        let(:note_id) { other_note.id }
+        let(:signed_id) { 'some_signed_id' }
 
         run_test!
       end

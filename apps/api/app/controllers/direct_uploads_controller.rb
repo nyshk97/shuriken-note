@@ -3,8 +3,8 @@
 class DirectUploadsController < ApplicationController
   before_action :authenticate!
 
-  ALLOWED_CONTENT_TYPES = Note::ALLOWED_IMAGE_TYPES
-  MAX_FILE_SIZE = Note::MAX_IMAGE_SIZE
+  ALLOWED_CONTENT_TYPES = Note::ALLOWED_FILE_TYPES
+  MAX_FILE_SIZE = Note::MAX_FILE_SIZE
 
   # POST /direct_uploads
   def create

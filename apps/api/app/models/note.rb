@@ -2,10 +2,22 @@
 
 class Note < ApplicationRecord
   belongs_to :user
-  has_many_attached :images
+  has_many_attached :attachments
 
+  # Allowed file types (allowlist approach)
   ALLOWED_IMAGE_TYPES = %w[image/jpeg image/png image/gif image/webp].freeze
-  MAX_IMAGE_SIZE = 30.megabytes
+  ALLOWED_DOCUMENT_TYPES = %w[application/pdf].freeze
+  ALLOWED_TEXT_TYPES = %w[text/plain text/csv application/json].freeze
+  ALLOWED_ARCHIVE_TYPES = %w[application/zip].freeze
+
+  ALLOWED_FILE_TYPES = (
+    ALLOWED_IMAGE_TYPES +
+    ALLOWED_DOCUMENT_TYPES +
+    ALLOWED_TEXT_TYPES +
+    ALLOWED_ARCHIVE_TYPES
+  ).freeze
+
+  MAX_FILE_SIZE = 30.megabytes
 
   enum :status, {
     personal: 'personal',
@@ -14,20 +26,24 @@ class Note < ApplicationRecord
   }, default: :personal
 
   validates :status, presence: true
-  validate :validate_images
+  validate :validate_attachments
+
+  def self.image_type?(content_type)
+    ALLOWED_IMAGE_TYPES.include?(content_type)
+  end
 
   private
 
-  def validate_images
-    return unless images.attached?
+  def validate_attachments
+    return unless attachments.attached?
 
-    images.each do |image|
-      unless ALLOWED_IMAGE_TYPES.include?(image.content_type)
-        errors.add(:images, "must be JPEG, PNG, GIF, or WebP (got #{image.content_type})")
+    attachments.each do |attachment|
+      unless ALLOWED_FILE_TYPES.include?(attachment.content_type)
+        errors.add(:attachments, "has unsupported file type: #{attachment.content_type}")
       end
 
-      if image.blob.byte_size > MAX_IMAGE_SIZE
-        errors.add(:images, "must be less than #{MAX_IMAGE_SIZE / 1.megabyte}MB")
+      if attachment.blob.byte_size > MAX_FILE_SIZE
+        errors.add(:attachments, "must be less than #{MAX_FILE_SIZE / 1.megabyte}MB")
       end
     end
   end

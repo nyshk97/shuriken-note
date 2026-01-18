@@ -10,20 +10,20 @@ class NotesController < ApplicationController
 
   # GET /notes
   def index
-    notes = current_user.notes.with_attached_images.search(params[:q]).order(sort_order)
+    notes = current_user.notes.with_attached_attachments.search(params[:q]).order(sort_order)
     render json: { notes: notes.map { |note| note_response(note) } }
   end
 
   # GET /notes/:id
   def show
-    note = current_user.notes.with_attached_images.find(params[:id])
+    note = current_user.notes.with_attached_attachments.find(params[:id])
     render json: { note: note_response(note) }
   end
 
   # POST /notes
   def create
     note = current_user.notes.build(note_attributes)
-    attach_images(note)
+    attach_files(note)
 
     if note.save
       render json: { note: note_response(note) }, status: :created
@@ -36,7 +36,7 @@ class NotesController < ApplicationController
   def update
     note = current_user.notes.find(params[:id])
     note.assign_attributes(note_attributes)
-    attach_images(note)
+    attach_files(note)
 
     if note.save
       render json: { note: note_response(note) }
@@ -52,22 +52,35 @@ class NotesController < ApplicationController
     head :no_content
   end
 
+  # DELETE /notes/:note_id/attachments/:signed_id
+  def detach_attachment
+    note = current_user.notes.find(params[:note_id])
+    attachment = note.attachments.find { |att| att.signed_id == params[:signed_id] }
+
+    if attachment
+      attachment.purge
+      head :no_content
+    else
+      render_error(code: 'not_found', message: 'Attachment not found', status: :not_found)
+    end
+  end
+
   private
 
   def note_params
-    params.fetch(:note, {}).permit(:title, :body, :status, image_ids: [])
+    params.fetch(:note, {}).permit(:title, :body, :status, attachment_ids: [])
   end
 
   def note_attributes
-    note_params.except(:image_ids)
+    note_params.except(:attachment_ids)
   end
 
-  def attach_images(note)
-    image_ids = note_params[:image_ids]
-    return if image_ids.blank?
+  def attach_files(note)
+    attachment_ids = note_params[:attachment_ids]
+    return if attachment_ids.blank?
 
-    # image_ids are blob signed_ids from Direct Upload
-    note.images.attach(image_ids)
+    # attachment_ids are blob signed_ids from Direct Upload
+    note.attachments.attach(attachment_ids)
   end
 
   def note_response(note)
@@ -76,20 +89,20 @@ class NotesController < ApplicationController
       title: note.title,
       body: note.body,
       status: note.status,
-      images: note.images.map { |image| image_response(image) },
+      attachments: note.attachments.map { |attachment| attachment_response(attachment) },
       created_at: note.created_at,
       updated_at: note.updated_at
     }
   end
 
-  def image_response(image)
+  def attachment_response(attachment)
     {
-      id: image.id,
-      signed_id: image.signed_id,
-      filename: image.filename.to_s,
-      content_type: image.content_type,
-      byte_size: image.byte_size,
-      url: url_for(image)
+      id: attachment.id,
+      signed_id: attachment.signed_id,
+      filename: attachment.filename.to_s,
+      content_type: attachment.content_type,
+      byte_size: attachment.byte_size,
+      url: url_for(attachment)
     }
   end
 
