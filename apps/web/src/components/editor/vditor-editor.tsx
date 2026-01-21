@@ -517,13 +517,31 @@ export function VditorEditor({
         ? 0
         : tableInfo.rowIndex + 1; // +1 to account for separator row
 
-      // Estimate character position (rough estimate based on column)
+      // Calculate character position by finding the nth pipe in the line
       const tableLines = tableRange.text.split("\n");
       const targetLine = tableLines[markdownRowIndex] || tableLines[0];
-      const cells = targetLine.split("|").filter((c) => c.trim() !== "" || c === "");
-      let ch = 1; // Start after first pipe
-      for (let i = 0; i < tableInfo.colIndex && i < cells.length; i++) {
-        ch += cells[i].length + 1; // +1 for pipe
+
+      // Find the position of the (colIndex + 1)th pipe to place cursor in the correct cell
+      // For example, in "| Col1 | Col2 | Col3 |":
+      //   - colIndex 0 -> cursor after 1st pipe (in Col1)
+      //   - colIndex 1 -> cursor after 2nd pipe (in Col2)
+      //   - colIndex 2 -> cursor after 3rd pipe (in Col3)
+      let pipeCount = 0;
+      let ch = 0;
+      for (let i = 0; i < targetLine.length; i++) {
+        if (targetLine[i] === "|") {
+          if (pipeCount === tableInfo.colIndex) {
+            // Found the pipe before our target cell, position cursor after it
+            ch = i + 2; // +1 for the pipe, +1 to be inside the cell (after space)
+            break;
+          }
+          pipeCount++;
+        }
+      }
+
+      // Fallback: if we didn't find enough pipes, use a position in the first cell
+      if (ch === 0) {
+        ch = 2; // After first pipe and space
       }
 
       const tableCursor = toTableCursor(markdownRowIndex, ch, 0);
