@@ -4,12 +4,22 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import type Vditor from "vditor";
 import "vditor/dist/index.css";
 import { useFloatingToolbar } from "./use-floating-toolbar";
+import { useTableDetection } from "./use-table-detection";
 import { FloatingToolbar, type ToolbarAction } from "./floating-toolbar";
+import { TableToolbar } from "./table-toolbar";
 import {
   uploadFile,
   generateFileMarkdown,
   getAllowedFileTypesAccept,
 } from "@/lib/api";
+import {
+  extractTableAtCursor,
+  replaceTableInMarkdown,
+  toTableCursor,
+  toFullCursor,
+  applyTableOperation,
+  type TableOperation,
+} from "@/lib/markdown-table";
 
 // URL detection regex
 const URL_REGEX = /^https?:\/\/[^\s]+$/;
@@ -170,6 +180,42 @@ export function VditorEditor({
     containerRef,
     toolbarRef,
   });
+
+  // Table detection state
+  const tableToolbarRef = useRef<HTMLDivElement>(null);
+  const { isInsideTable, tableInfo, refresh: refreshTableDetection } = useTableDetection({
+    containerRef,
+  });
+
+  // Calculate table toolbar position
+  const getTableToolbarPosition = useCallback(() => {
+    if (!tableInfo?.element) {
+      return { top: 0, left: 0 };
+    }
+
+    const tableRect = tableInfo.element.getBoundingClientRect();
+    const toolbarHeight = 36;
+    const padding = 8;
+
+    let top = tableRect.top - toolbarHeight - padding;
+    let left = tableRect.left;
+
+    // If not enough space above, show below the table
+    if (top < padding) {
+      top = tableRect.bottom + padding;
+    }
+
+    // Keep within viewport
+    const toolbarWidth = 280;
+    if (left + toolbarWidth > window.innerWidth - padding) {
+      left = window.innerWidth - toolbarWidth - padding;
+    }
+    if (left < padding) {
+      left = padding;
+    }
+
+    return { top, left };
+  }, [tableInfo?.element]);
 
   const handleInput = useCallback(
     (newValue: string) => {
@@ -424,6 +470,107 @@ export function VditorEditor({
     }
   }, []);
 
+  // Handle table operations
+  const handleTableOperation = useCallback(
+    (operation: TableOperation) => {
+      if (!editorRef.current || !tableInfo) return;
+
+      const markdown = editorRef.current.getValue();
+      const selection = window.getSelection();
+
+      if (!selection || selection.rangeCount === 0) return;
+
+      // Get current cursor position in the markdown
+      // We use the table's row/col info to estimate the cursor line
+      const lines = markdown.split("\n");
+
+      // Find the table in the markdown by searching for lines that match table pattern
+      let tableStartLine = -1;
+      let inTable = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const isTableLine = line.includes("|") && line.trim().length > 0;
+
+        if (isTableLine && !inTable) {
+          // Check if next line is separator
+          const nextLine = lines[i + 1];
+          if (nextLine && /^[\s|:\-]+$/.test(nextLine) && nextLine.includes("-")) {
+            tableStartLine = i;
+            inTable = true;
+          }
+        } else if (!isTableLine && inTable) {
+          break;
+        }
+      }
+
+      if (tableStartLine === -1) return;
+
+      // Extract the table
+      const tableRange = extractTableAtCursor(markdown, tableStartLine);
+      if (!tableRange) return;
+
+      // Calculate cursor position within the table
+      // In Vditor IR mode, row 0 is header, rows 1+ are body
+      // In markdown, row 0 is header, row 1 is separator, rows 2+ are body
+      const markdownRowIndex = tableInfo.isHeaderRow
+        ? 0
+        : tableInfo.rowIndex + 1; // +1 to account for separator row
+
+      // Calculate character position by finding the nth pipe in the line
+      const tableLines = tableRange.text.split("\n");
+      const targetLine = tableLines[markdownRowIndex] || tableLines[0];
+
+      // Find the position of the (colIndex + 1)th pipe to place cursor in the correct cell
+      // For example, in "| Col1 | Col2 | Col3 |":
+      //   - colIndex 0 -> cursor after 1st pipe (in Col1)
+      //   - colIndex 1 -> cursor after 2nd pipe (in Col2)
+      //   - colIndex 2 -> cursor after 3rd pipe (in Col3)
+      let pipeCount = 0;
+      let ch = 0;
+      for (let i = 0; i < targetLine.length; i++) {
+        if (targetLine[i] === "|") {
+          if (pipeCount === tableInfo.colIndex) {
+            // Found the pipe before our target cell, position cursor after it
+            ch = i + 2; // +1 for the pipe, +1 to be inside the cell (after space)
+            break;
+          }
+          pipeCount++;
+        }
+      }
+
+      // Fallback: if we didn't find enough pipes, use a position in the first cell
+      if (ch === 0) {
+        ch = 2; // After first pipe and space
+      }
+
+      const tableCursor = toTableCursor(markdownRowIndex, ch, 0);
+
+      try {
+        // Apply the operation
+        const result = applyTableOperation(tableRange.text, tableCursor, operation);
+
+        // Replace the table in the markdown
+        const newMarkdown = replaceTableInMarkdown(markdown, tableRange, result.table);
+
+        // Update the editor
+        editorRef.current.setValue(newMarkdown);
+
+        // Restore focus and refresh table detection
+        setTimeout(() => {
+          editorRef.current?.focus();
+          refreshTableDetection();
+        }, 50);
+
+        // Trigger onChange
+        onChange?.(newMarkdown);
+      } catch (error) {
+        console.error("Failed to apply table operation:", error);
+      }
+    },
+    [tableInfo, onChange, refreshTableDetection]
+  );
+
   return (
     <div
       className="relative"
@@ -438,6 +585,17 @@ export function VditorEditor({
           position={position}
           onAction={handleToolbarAction}
           onClose={close}
+        />
+      )}
+      {/* Table editing toolbar */}
+      {isInsideTable && tableInfo && (
+        <TableToolbar
+          ref={tableToolbarRef}
+          position={getTableToolbarPosition()}
+          onOperation={handleTableOperation}
+          isHeaderRow={tableInfo.isHeaderRow}
+          totalRows={tableInfo.totalRows}
+          totalCols={tableInfo.totalCols}
         />
       )}
       {/* Hidden file input for file upload */}
