@@ -3,7 +3,8 @@
 Date: 2026-01-11
 
 ## Status
-Proposed
+
+Accepted
 
 ---
 
@@ -41,6 +42,29 @@ The following infrastructure configuration is adopted.
 - File Storage: AWS S3
 - CDN / DNS / TLS: AWS CloudFront + Route53 + ACM
 - Infrastructure as Code: Terraform
+- Secrets Management: AWS SSM Parameter Store
+
+### Network Configuration
+
+- **NAT Gateway is intentionally not used** to reduce operational costs
+- Fargate tasks are placed in public subnets with public IP assignment
+- Security is enforced through Security Groups (ALB → ECS only)
+- RDS is placed in private subnets, accessible only from ECS
+
+### Phased Rollout
+
+**Phase 1 (Initial Deployment)**
+
+- API: ALB direct access (default DNS)
+- Files: CloudFront → S3 (default CloudFront domain)
+- No custom domain, HTTP only for API
+
+**Phase 2 (Production Release)**
+
+- Custom domain via Route53
+- ACM certificates for TLS
+- CloudFront integration for API
+- HTTPS for all traffic
 
 ---
 
@@ -65,7 +89,7 @@ The following infrastructure configuration is adopted.
 
 ### Reason for adopting AWS S3 for file storage
 
-- Naturally integrates with Active Storage’s S3-compatible implementation
+- Naturally integrates with Active Storage's S3-compatible implementation
 - Provides durable and highly scalable object storage
 
 ### Reason for adopting AWS CloudFront + Route53 + ACM for CDN / DNS / TLS
@@ -79,6 +103,20 @@ The following infrastructure configuration is adopted.
 - Infrastructure can be managed as code, ensuring reproducibility
 - Future changes and expansions of the architecture become easier
 
+### Reason for adopting SSM Parameter Store for secrets management
+
+- Free tier available (Standard parameters)
+- Sufficient for personal project without auto-rotation requirements
+- Native integration with ECS Task Definitions
+- Alternative considered: AWS Secrets Manager (rejected due to cost: $0.40/secret/month)
+
+### Reason for not using NAT Gateway
+
+- **Cost reduction**: NAT Gateway costs ~$30-45/month, which is significant for a personal project
+- **Acceptable trade-off**: Fargate tasks in public subnets with Security Groups provide sufficient security
+- **Simplicity**: Reduces network complexity for initial deployment
+- **Future option**: Can add NAT Gateway later if private subnet requirements emerge
+
 ---
 
 ## Alternatives Considered
@@ -86,10 +124,12 @@ The following infrastructure configuration is adopted.
 ### Alternative A: Vercel + Render + Cloudflare R2 + Cloudflare
 
 **Pros**
+
 - Easy initial setup with low operational overhead
 - Simple architecture based on managed services
 
 **Cons**
+
 - Cloud infrastructure is distributed across multiple vendors, making integrated management more complex
 - Higher abstraction compared to standard IaaS-based operational design, reducing flexibility
 
@@ -98,12 +138,30 @@ The following infrastructure configuration is adopted.
 ### Alternative B: Full AWS adoption (including hosting Next.js on AWS)
 
 **Pros**
+
 - All components can be integrated within a single cloud provider
 - Network and security design can be fully centralized
 
 **Cons**
+
 - Next.js hosting becomes more complex, reducing frontend development productivity
 - The architecture becomes excessive relative to project requirements
+
+---
+
+### Alternative C: EC2 + Kamal deployment
+
+**Pros**
+
+- Lower cost (~$8/month for t3.micro vs ~$30/month for Fargate + ALB)
+- Simpler deployment with Rails 8 default tooling
+- Direct SSH access for debugging
+
+**Cons**
+
+- Server management overhead (OS updates, Docker maintenance)
+- Less demonstrable cloud architecture skills for portfolio purposes
+- Limited scalability without additional configuration
 
 ---
 
@@ -114,21 +172,44 @@ The following infrastructure configuration is adopted.
 - Managed-service-centric architecture reduces infrastructure operational overhead
 - Reproducible infrastructure enables easier long-term evolution
 - A standard cloud architecture with availability and fault tolerance is achieved
+- Cost-optimized by avoiding NAT Gateway (~$30-45/month savings)
+- Portfolio value: demonstrates AWS ECS, ALB, CloudFront, Terraform skills
 
 ### Negative / Constraints
 
 - Initial infrastructure setup effort increases
-- A baseline cloud infrastructure cost is incurred even for small-scale operation
+- A baseline cloud infrastructure cost is incurred even for small-scale operation (~$55/month)
+- Fargate in public subnet is less isolated than private subnet deployment
+
+---
+
+## Cost Estimate (Monthly)
+
+| Service       | Specification     | Cost             |
+| ------------- | ----------------- | ---------------- |
+| ECS Fargate   | 0.25 vCPU / 512MB | ~$10             |
+| ALB           | 1                 | ~$20             |
+| RDS           | db.t3.micro       | ~$15 (free tier) |
+| S3            | Few GB            | ~$1              |
+| CloudFront    | Low traffic       | ~$1-5            |
+| ECR           | Few GB            | ~$1              |
+| CloudWatch    | Basic logs        | ~$1              |
+| Data Transfer | Low volume        | ~$2              |
+| **Total**     |                   | **~$55/month**   |
+
+Note: NAT Gateway would add ~$30-45/month if used.
 
 ---
 
 ## Notes
 
-- Rails API runs on ECS Fargate containers
-- API traffic is routed from CloudFront to the backend through an ALB
+- Rails API runs on ECS Fargate containers (0.25 vCPU / 512MB)
+- API traffic is routed through ALB (Phase 1) or CloudFront → ALB (Phase 2)
 - Active Storage Direct Upload sends files directly from clients to S3
+- S3 files are served through CloudFront from Phase 1
 - Private files are access-controlled using CloudFront signed URLs
 - Database backups rely on RDS automated backup mechanisms
 - Logs and metrics are centralized in CloudWatch
+- Secrets are stored in SSM Parameter Store (SecureString)
 
 ---
