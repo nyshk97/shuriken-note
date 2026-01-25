@@ -1,0 +1,15 @@
+# Copy this file to terraform.tfvars and fill in the values
+# DO NOT commit terraform.tfvars to version control
+
+# Required secrets
+db_password      = "your-secure-database-password"
+rails_master_key = "your-rails-master-key"
+
+# Optional overrides (defaults are set in variables.tf)
+# project_name      = "shuriken-note"
+# environment       = "production"
+# aws_region        = "ap-northeast-1"
+# ecs_task_cpu      = 256
+# ecs_task_memory   = 512
+# ecs_desired_count = 1
+# db_instance_class = "db.t3.micro"
