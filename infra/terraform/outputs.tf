@@ -119,3 +119,19 @@ output "database_url" {
   value       = "postgres://${var.db_username}@${aws_db_instance.main.endpoint}/${aws_db_instance.main.db_name}"
   sensitive   = true
 }
+
+# -----------------------------------------------------------------------------
+# CI/CD (GitHub Actions)
+# -----------------------------------------------------------------------------
+
+output "github_actions_access_key_id" {
+  description = "AWS Access Key ID for GitHub Actions (add to GitHub Secrets as AWS_ACCESS_KEY_ID)"
+  value       = aws_iam_access_key.github_actions.id
+  sensitive   = true
+}
+
+output "github_actions_secret_access_key" {
+  description = "AWS Secret Access Key for GitHub Actions (add to GitHub Secrets as AWS_SECRET_ACCESS_KEY)"
+  value       = aws_iam_access_key.github_actions.secret
+  sensitive   = true
+}
