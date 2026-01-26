@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class NotesController < ApplicationController
-  include Rails.application.routes.url_helpers
+  include CloudfrontUrl
 
   before_action :authenticate!
 
@@ -105,7 +105,7 @@ class NotesController < ApplicationController
       filename: attachment.filename.to_s,
       content_type: attachment.content_type,
       byte_size: attachment.byte_size,
-      url: url_for(attachment)
+      url: cdn_url_for(attachment)
     }
   end
 

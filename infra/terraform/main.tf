@@ -259,6 +259,18 @@ resource "aws_ecs_task_definition" "api" {
         {
           name  = "RAILS_LOG_TO_STDOUT"
           value = "true"
+        },
+        {
+          name  = "AWS_REGION"
+          value = var.aws_region
+        },
+        {
+          name  = "S3_BUCKET_NAME"
+          value = aws_s3_bucket.storage.id
+        },
+        {
+          name  = "CLOUDFRONT_HOST"
+          value = aws_cloudfront_distribution.storage.domain_name
         }
       ]
 
