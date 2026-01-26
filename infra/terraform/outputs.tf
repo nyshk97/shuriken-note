@@ -74,17 +74,31 @@ output "s3_bucket_regional_domain_name" {
 }
 
 # -----------------------------------------------------------------------------
-# CloudFront
+# CloudFront (Storage)
 # -----------------------------------------------------------------------------
 
-output "cloudfront_distribution_id" {
-  description = "CloudFront distribution ID"
+output "cloudfront_storage_distribution_id" {
+  description = "CloudFront distribution ID for S3 storage"
   value       = aws_cloudfront_distribution.storage.id
 }
 
-output "cloudfront_domain_name" {
-  description = "CloudFront domain name (use this for file URLs)"
+output "cloudfront_storage_domain_name" {
+  description = "CloudFront domain name for file URLs"
   value       = aws_cloudfront_distribution.storage.domain_name
+}
+
+# -----------------------------------------------------------------------------
+# CloudFront (API)
+# -----------------------------------------------------------------------------
+
+output "cloudfront_api_distribution_id" {
+  description = "CloudFront distribution ID for API HTTPS"
+  value       = aws_cloudfront_distribution.api.id
+}
+
+output "cloudfront_api_domain_name" {
+  description = "CloudFront domain name for API (use this as NEXT_PUBLIC_API_URL)"
+  value       = "https://${aws_cloudfront_distribution.api.domain_name}"
 }
 
 # -----------------------------------------------------------------------------
