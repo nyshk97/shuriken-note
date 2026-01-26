@@ -19,6 +19,8 @@ jobs:
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
+    # Skip if AWS credentials are not configured yet
+    if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}
 
     permissions:
       contents: read
