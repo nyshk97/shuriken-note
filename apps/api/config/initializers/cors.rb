@@ -7,7 +7,9 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins 'http://localhost:3001'
+    origins 'http://localhost:3001',
+            /\Ahttps:\/\/shuriken-note.*\.vercel\.app\z/, # Vercel preview deployments
+            'https://shuriken-note.vercel.app'            # Vercel production
 
     resource '*',
       headers: :any,
