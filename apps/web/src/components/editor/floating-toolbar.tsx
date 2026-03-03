@@ -2,6 +2,7 @@
 
 import { forwardRef } from "react";
 import {
+  Bold,
   Strikethrough,
   CheckSquare,
   Table,
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import type { ToolbarPosition } from "./use-floating-toolbar";
 
 export type ToolbarAction =
+  | "bold"
   | "strikethrough"
   | "checkbox"
   | "table"
@@ -25,6 +27,11 @@ export interface FloatingToolbarProps {
 }
 
 const toolbarItems: { id: ToolbarAction; icon: React.ReactNode; label: string }[] = [
+  {
+    id: "bold",
+    icon: <Bold className="h-4 w-4" />,
+    label: "Bold",
+  },
   {
     id: "strikethrough",
     icon: <Strikethrough className="h-4 w-4" />,
