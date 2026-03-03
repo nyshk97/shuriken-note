@@ -67,3 +67,5 @@ group :development, :test do
   # API documentation specs
   gem 'rswag-specs'
 end
+
+gem 'kaminari', '~> 1.2'

@@ -6,7 +6,7 @@ import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 const protectedRoutes = ["/"];
 
 // Routes that are public (no authentication required)
-const publicRoutes = ["/p"];
+const publicRoutes = ["/p", "/articles"];
 
 // Routes that should redirect to default landing if already authenticated
 const authRoutes = ["/login"];
