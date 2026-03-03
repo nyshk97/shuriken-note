@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { Note } from "@/lib/api";
+import type { NoteVisibility } from "@/lib/api";
 
 interface CreateNoteOptions {
-  status?: Note["status"];
+  visibility?: NoteVisibility;
   parent_note_id?: string;
 }
 
@@ -12,15 +12,14 @@ export function useCreateNote() {
   const router = useRouter();
 
   return {
-    mutate: (statusOrOptions?: Note["status"] | CreateNoteOptions) => {
-      // Support both old signature (status) and new signature (options object)
+    mutate: (visibilityOrOptions?: NoteVisibility | CreateNoteOptions) => {
       const options: CreateNoteOptions =
-        typeof statusOrOptions === "string"
-          ? { status: statusOrOptions }
-          : statusOrOptions || {};
+        typeof visibilityOrOptions === "string"
+          ? { visibility: visibilityOrOptions }
+          : visibilityOrOptions || {};
 
       const params = new URLSearchParams();
-      if (options.status) params.set("status", options.status);
+      if (options.visibility) params.set("visibility", options.visibility);
       if (options.parent_note_id) params.set("parent", options.parent_note_id);
 
       const query = params.toString();

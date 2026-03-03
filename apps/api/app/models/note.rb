@@ -21,28 +21,33 @@ class Note < ApplicationRecord
 
   MAX_FILE_SIZE = 30.megabytes
 
-  enum :status, {
+  enum :visibility, {
     personal: 'personal',
-    published: 'published',
-    archived: 'archived'
-  }, default: :personal
+    unlisted: 'unlisted',
+    public: 'public'
+  }, default: :personal, prefix: true
 
-  validates :status, presence: true
+  validates :visibility, presence: true
   validate :validate_attachments
   validate :parent_must_not_have_parent
   validate :parent_must_belong_to_same_user
 
   before_save :clear_favorite_on_archive
 
-  # Returns the effective status considering parent inheritance
-  # - If self is archived, return archived (child can be independently archived)
-  # - If parent exists, inherit parent's effective_status
-  # - Otherwise, return own status
-  def effective_status
-    return 'archived' if archived?
-    return parent.effective_status if parent.present?
+  scope :active, -> { where(archived: false) }
+  scope :not_personal, -> { where.not(visibility: :personal) }
 
-    status
+  def effective_visibility
+    return parent.effective_visibility if parent.present?
+
+    visibility
+  end
+
+  def effectively_archived?
+    return true if archived?
+    return parent.effectively_archived? if parent.present?
+
+    false
   end
 
   def self.image_type?(content_type)
@@ -78,7 +83,7 @@ class Note < ApplicationRecord
   end
 
   def clear_favorite_on_archive
-    self.favorited_at = nil if status_changed? && archived?
+    self.favorited_at = nil if archived_changed? && archived?
   end
 
   # Full-text search using pg_bigm

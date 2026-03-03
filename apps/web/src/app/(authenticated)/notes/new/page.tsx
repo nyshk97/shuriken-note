@@ -16,7 +16,7 @@ export default function NewNotePage() {
   const [isCreating, setIsCreating] = useState(false);
 
   // Get initial status and parent from URL params
-  const initialStatus = (searchParams.get("status") as Note["status"]) || "personal";
+  const initialVisibility = (searchParams.get("visibility") as Note["visibility"]) || "personal";
   const parentNoteId = searchParams.get("parent") || undefined;
 
   // Track if content has been entered
@@ -34,7 +34,7 @@ export default function NewNotePage() {
       createNote({
         title: title.trim(),
         body: body.trim(),
-        status: initialStatus,
+        visibility: initialVisibility,
         parent_note_id: parentNoteId,
       }),
     onSuccess: (note) => {

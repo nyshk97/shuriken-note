@@ -84,12 +84,11 @@ function NoteEditor({ note }: { note: Note }) {
     [allNotes, note.id]
   );
 
-  // Can add child if: not archived and not already a child note
-  const canAddChild = note.effective_status !== "archived" && !note.parent_note_id;
+  const canAddChild = !note.effectively_archived && !note.parent_note_id;
 
   const handleAddChild = () => {
     createNoteMutation.mutate({
-      status: note.effective_status === "published" ? "published" : "personal",
+      visibility: note.effective_visibility !== "personal" ? note.effective_visibility : "personal",
       parent_note_id: note.id,
     });
   };
@@ -237,8 +236,8 @@ function NoteEditor({ note }: { note: Note }) {
 // Child note item component
 function ChildNoteItem({ note }: { note: Note }) {
   const getIcon = () => {
-    if (note.effective_status === "published") return <Globe size={16} />;
-    if (note.effective_status === "archived") return <Archive size={16} />;
+    if (note.effectively_archived) return <Archive size={16} />;
+    if (note.effective_visibility !== "personal") return <Globe size={16} />;
     return <FileText size={16} />;
   };
 

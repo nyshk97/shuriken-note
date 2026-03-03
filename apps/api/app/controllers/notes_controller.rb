@@ -68,7 +68,7 @@ class NotesController < ApplicationController
   private
 
   def note_params
-    params.fetch(:note, {}).permit(:title, :body, :status, :parent_note_id, :favorited_at, attachment_ids: [])
+    params.fetch(:note, {}).permit(:title, :body, :visibility, :archived, :parent_note_id, :favorited_at, attachment_ids: [])
   end
 
   def note_attributes
@@ -79,7 +79,6 @@ class NotesController < ApplicationController
     attachment_ids = note_params[:attachment_ids]
     return if attachment_ids.blank?
 
-    # attachment_ids are blob signed_ids from Direct Upload
     note.attachments.attach(attachment_ids)
   end
 
@@ -88,8 +87,10 @@ class NotesController < ApplicationController
       id: note.id,
       title: note.title,
       body: note.body,
-      status: note.status,
-      effective_status: note.effective_status,
+      visibility: note.visibility,
+      effective_visibility: note.effective_visibility,
+      archived: note.archived,
+      effectively_archived: note.effectively_archived?,
       parent_note_id: note.parent_note_id,
       favorited_at: note.favorited_at,
       attachments: note.attachments.map { |attachment| attachment_response(attachment) },

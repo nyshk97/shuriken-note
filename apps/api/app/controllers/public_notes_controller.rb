@@ -5,7 +5,7 @@ class PublicNotesController < ApplicationController
 
   # GET /p/:id
   def show
-    note = Note.published.find(params[:id])
+    note = Note.not_personal.active.find(params[:id])
     render json: { note: public_note_response(note) }
   end
 
@@ -16,7 +16,7 @@ class PublicNotesController < ApplicationController
       id: note.id,
       title: note.title,
       body: note.body,
-      status: note.status,
+      visibility: note.visibility,
       created_at: note.created_at,
       updated_at: note.updated_at
     }

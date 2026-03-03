@@ -94,15 +94,14 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     [results, selectedIndex, handleSelect]
   );
 
-  const getStatusIcon = (status: Note["status"]) => {
-    switch (status) {
-      case "published":
-        return <Globe size={16} className="text-[var(--workspace-text-secondary)]" />;
-      case "archived":
-        return <Archive size={16} className="text-[var(--workspace-text-secondary)]" />;
-      default:
-        return <FileText size={16} className="text-[var(--workspace-text-secondary)]" />;
+  const getNoteIcon = (note: Note) => {
+    if (note.effectively_archived) {
+      return <Archive size={16} className="text-[var(--workspace-text-secondary)]" />;
     }
+    if (note.visibility !== "personal") {
+      return <Globe size={16} className="text-[var(--workspace-text-secondary)]" />;
+    }
+    return <FileText size={16} className="text-[var(--workspace-text-secondary)]" />;
   };
 
   // Get snippet from body
@@ -173,7 +172,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                       : "hover:bg-[var(--workspace-hover)]"
                   }`}
                 >
-                  <div className="pt-0.5">{getStatusIcon(note.status)}</div>
+                  <div className="pt-0.5">{getNoteIcon(note)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-[var(--workspace-text-primary)] truncate">
                       {note.title || "Untitled"}
