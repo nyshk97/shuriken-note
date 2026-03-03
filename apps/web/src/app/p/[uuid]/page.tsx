@@ -8,7 +8,7 @@ interface PublicNote {
   id: string;
   title: string | null;
   body: string | null;
-  status: "published";
+  visibility: "unlisted" | "public";
   created_at: string;
   updated_at: string;
 }

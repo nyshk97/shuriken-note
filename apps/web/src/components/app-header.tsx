@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
-import { getNote, updateNote, deleteNote, type Note } from "@/lib/api";
+import { getNote, updateNote, deleteNote, type Note, type NoteVisibility } from "@/lib/api";
 import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 import { useSaveStatus } from "@/contexts/save-status-context";
 import {
@@ -50,11 +50,10 @@ function formatRelativeTime(dateString: string): string {
   return `${Math.floor(diffInSeconds / 31536000)}y ago`;
 }
 
-// Status display labels
-const statusLabels: Record<Note["status"], string> = {
+const visibilityLabels: Record<NoteVisibility, string> = {
   personal: "Private",
-  published: "Public",
-  archived: "Archived",
+  unlisted: "Public",
+  public: "Blog",
 };
 
 export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
@@ -79,9 +78,18 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
     enabled: !!isNotePage,
   });
 
-  // Update note status mutation
-  const updateStatusMutation = useMutation({
-    mutationFn: (status: Note["status"]) => updateNote(noteId!, { status }),
+  // Update note visibility mutation
+  const updateVisibilityMutation = useMutation({
+    mutationFn: (visibility: NoteVisibility) => updateNote(noteId!, { visibility }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["note", noteId] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
+
+  // Archive/unarchive mutation
+  const updateArchivedMutation = useMutation({
+    mutationFn: (archived: boolean) => updateNote(noteId!, { archived }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["note", noteId] });
       queryClient.invalidateQueries({ queryKey: ["notes"] });
@@ -126,8 +134,14 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
     }
   }
 
-  function handleStatusChange(status: Note["status"]) {
-    updateStatusMutation.mutate(status);
+  function handleVisibilityChange(visibility: NoteVisibility) {
+    updateVisibilityMutation.mutate(visibility);
+  }
+
+  function handleArchiveToggle() {
+    if (note) {
+      updateArchivedMutation.mutate(!note.archived);
+    }
   }
 
   function handleDelete() {
@@ -158,42 +172,42 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
               {note.title || "Untitled"}
             </span>
 
-            {/* Status dropdown */}
+            {/* Visibility dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-1 px-2 py-0.5 text-xs text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded transition-colors">
-                  {note.status === "published" ? <Globe size={14} /> : <Lock size={14} />}
-                  <span>{statusLabels[note.status]}</span>
+                  {note.visibility !== "personal" ? <Globe size={14} /> : <Lock size={14} />}
+                  <span>{visibilityLabels[note.visibility]}</span>
                   <ChevronDown size={14} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuItem
-                  onClick={() => handleStatusChange("personal")}
-                  className={note.status === "personal" ? "bg-[var(--workspace-hover)]" : ""}
+                  onClick={() => handleVisibilityChange("personal")}
+                  className={note.visibility === "personal" ? "bg-[var(--workspace-hover)]" : ""}
                 >
                   <Lock size={16} className="mr-2" />
                   Private
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleStatusChange("published")}
-                  className={note.status === "published" ? "bg-[var(--workspace-hover)]" : ""}
+                  onClick={() => handleVisibilityChange("unlisted")}
+                  className={note.visibility === "unlisted" ? "bg-[var(--workspace-hover)]" : ""}
                 >
                   <Globe size={16} className="mr-2" />
                   Public
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => handleStatusChange("archived")}
-                  className={note.status === "archived" ? "bg-[var(--workspace-hover)]" : ""}
+                  onClick={() => handleVisibilityChange("public")}
+                  className={note.visibility === "public" ? "bg-[var(--workspace-hover)]" : ""}
                 >
-                  <Archive size={16} className="mr-2" />
-                  Archived
+                  <Globe size={16} className="mr-2" />
+                  Blog
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Open public page button (only for published notes) */}
-            {note.status === "published" && (
+            {/* Open public page button (for unlisted or public notes) */}
+            {note.visibility !== "personal" && (
               <a
                 href={`/p/${note.id}`}
                 target="_blank"
@@ -222,7 +236,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
             </span>
 
             {/* Star button - toggle favorite (not available for archived notes) */}
-            {note.effective_status !== "archived" && (
+            {!note.effectively_archived && (
               <button
                 type="button"
                 onClick={handleToggleFavorite}
@@ -249,11 +263,11 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {/* Add child note - only for non-child, non-archived notes */}
-                {!note.parent_note_id && note.effective_status !== "archived" && (
+                {!note.parent_note_id && !note.effectively_archived && (
                   <>
                     <DropdownMenuItem
                       onClick={() => createNoteMutation.mutate({
-                        status: note.effective_status === "published" ? "published" : "personal",
+                        visibility: note.effective_visibility !== "personal" ? note.effective_visibility : "personal",
                         parent_note_id: note.id,
                       })}
                     >
@@ -263,6 +277,12 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
                     <DropdownMenuSeparator />
                   </>
                 )}
+                {/* Archive / Unarchive toggle */}
+                <DropdownMenuItem onClick={handleArchiveToggle}>
+                  <Archive size={16} className="mr-2" />
+                  {note.archived ? "Unarchive" : "Archive"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleDelete}
                   className="text-red-400 focus:text-red-400"

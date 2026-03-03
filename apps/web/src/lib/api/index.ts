@@ -7,8 +7,12 @@ export {
   createNote,
   updateNote,
   deleteNote,
+  getPublicNote,
   type Note,
+  type NoteVisibility,
+  type PublicNote,
   type NoteImage,
+  type NoteAttachment,
   type CreateNoteInput,
   type UpdateNoteInput,
 } from "./notes";

@@ -6,7 +6,7 @@ RSpec.describe Note do
   describe 'validations' do
     subject { build(:note) }
 
-    it { is_expected.to validate_presence_of(:status) }
+    it { is_expected.to validate_presence_of(:visibility) }
   end
 
   describe 'associations' do
@@ -49,54 +49,79 @@ RSpec.describe Note do
     end
   end
 
-  describe '#effective_status' do
+  describe '#effective_visibility' do
     let(:user) { create(:user) }
 
     context 'when note has no parent' do
-      it 'returns own status for personal note' do
-        note = create(:note, user: user, status: :personal)
-        expect(note.effective_status).to eq('personal')
+      it 'returns own visibility for personal note' do
+        note = create(:note, user: user, visibility: :personal)
+        expect(note.effective_visibility).to eq('personal')
       end
 
-      it 'returns own status for published note' do
-        note = create(:note, user: user, status: :published)
-        expect(note.effective_status).to eq('published')
+      it 'returns own visibility for unlisted note' do
+        note = create(:note, user: user, visibility: :unlisted)
+        expect(note.effective_visibility).to eq('unlisted')
       end
 
-      it 'returns own status for archived note' do
-        note = create(:note, user: user, status: :archived)
-        expect(note.effective_status).to eq('archived')
+      it 'returns own visibility for public note' do
+        note = create(:note, user: user, visibility: :public)
+        expect(note.effective_visibility).to eq('public')
       end
     end
 
     context 'when note has parent' do
-      let(:parent_note) { create(:note, user: user, status: :published) }
-      let(:child_note) { create(:note, user: user, parent: parent_note, status: :personal) }
+      let(:parent_note) { create(:note, user: user, visibility: :unlisted) }
+      let(:child_note) { create(:note, user: user, parent: parent_note, visibility: :personal) }
 
-      it 'inherits parent status when child is not archived' do
-        expect(child_note.effective_status).to eq('published')
-      end
-
-      it 'returns archived when child is archived regardless of parent' do
-        child_note.update!(status: :archived)
-        expect(child_note.effective_status).to eq('archived')
-      end
-
-      it 'returns archived when parent is archived' do
-        parent_note.update!(status: :archived)
-        expect(child_note.reload.effective_status).to eq('archived')
+      it 'inherits parent visibility' do
+        expect(child_note.effective_visibility).to eq('unlisted')
       end
     end
 
-    context 'when parent status changes' do
-      let(:parent_note) { create(:note, user: user, status: :personal) }
-      let(:child_note) { create(:note, user: user, parent: parent_note, status: :personal) }
+    context 'when parent visibility changes' do
+      let(:parent_note) { create(:note, user: user, visibility: :personal) }
+      let(:child_note) { create(:note, user: user, parent: parent_note, visibility: :personal) }
 
-      it 'reflects parent status change in effective_status' do
-        expect(child_note.effective_status).to eq('personal')
+      it 'reflects parent visibility change' do
+        expect(child_note.effective_visibility).to eq('personal')
 
-        parent_note.update!(status: :published)
-        expect(child_note.reload.effective_status).to eq('published')
+        parent_note.update!(visibility: :unlisted)
+        expect(child_note.reload.effective_visibility).to eq('unlisted')
+      end
+    end
+  end
+
+  describe '#effectively_archived?' do
+    let(:user) { create(:user) }
+
+    context 'when note has no parent' do
+      it 'returns false for active note' do
+        note = create(:note, user: user)
+        expect(note.effectively_archived?).to be false
+      end
+
+      it 'returns true for archived note' do
+        note = create(:note, user: user, archived: true)
+        expect(note.effectively_archived?).to be true
+      end
+    end
+
+    context 'when note has parent' do
+      let(:parent_note) { create(:note, user: user) }
+      let(:child_note) { create(:note, user: user, parent: parent_note) }
+
+      it 'returns true when child is archived regardless of parent' do
+        child_note.update!(archived: true)
+        expect(child_note.effectively_archived?).to be true
+      end
+
+      it 'returns true when parent is archived' do
+        parent_note.update!(archived: true)
+        expect(child_note.reload.effectively_archived?).to be true
+      end
+
+      it 'returns false when neither is archived' do
+        expect(child_note.effectively_archived?).to be false
       end
     end
   end
@@ -233,9 +258,10 @@ RSpec.describe Note do
 
   describe 'enums' do
     it do
-      is_expected.to define_enum_for(:status)
-        .with_values(personal: 'personal', published: 'published', archived: 'archived')
+      is_expected.to define_enum_for(:visibility)
+        .with_values(personal: 'personal', unlisted: 'unlisted', public: 'public')
         .backed_by_column_of_type(:string)
+        .with_prefix(true)
     end
   end
 
@@ -307,6 +333,35 @@ RSpec.describe Note do
         results = user.notes.search('会議')
         expect(results).to include(note_japanese)
       end
+    end
+  end
+
+  describe 'scopes' do
+    let(:user) { create(:user) }
+
+    describe '.active' do
+      let!(:active_note) { create(:note, user: user) }
+      let!(:archived_note) { create(:note, user: user, archived: true) }
+
+      it 'returns only non-archived notes' do
+        expect(user.notes.active).to include(active_note)
+        expect(user.notes.active).not_to include(archived_note)
+      end
+    end
+  end
+
+  describe 'clear_favorite_on_archive' do
+    let(:user) { create(:user) }
+    let(:note) { create(:note, user: user, favorited_at: Time.current) }
+
+    it 'clears favorited_at when archiving' do
+      note.update!(archived: true)
+      expect(note.reload.favorited_at).to be_nil
+    end
+
+    it 'does not clear favorited_at when not archiving' do
+      note.update!(visibility: :unlisted)
+      expect(note.reload.favorited_at).to be_present
     end
   end
 end

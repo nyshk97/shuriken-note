@@ -3,14 +3,22 @@ FactoryBot.define do
     user
     title { Faker::Lorem.sentence(word_count: 3) }
     body { Faker::Lorem.paragraphs(number: 2).join("\n\n") }
-    status { :personal }
+    visibility { :personal }
+
+    trait :unlisted do
+      visibility { :unlisted }
+    end
 
     trait :published do
-      status { :published }
+      visibility { :unlisted }
+    end
+
+    trait :public_listed do
+      visibility { :public }
     end
 
     trait :archived do
-      status { :archived }
+      archived { true }
     end
 
     trait :untitled do

@@ -29,14 +29,16 @@ RSpec.describe 'Notes API', type: :request do
         id: { type: :string, format: :uuid },
         title: { type: :string, nullable: true },
         body: { type: :string, nullable: true },
-        status: { type: :string, enum: %w[personal published archived] },
-        effective_status: { type: :string, enum: %w[personal published archived] },
+        visibility: { type: :string, enum: %w[personal unlisted public] },
+        effective_visibility: { type: :string, enum: %w[personal unlisted public] },
+        archived: { type: :boolean },
+        effectively_archived: { type: :boolean },
         parent_note_id: { type: :string, format: :uuid, nullable: true },
         attachments: { type: :array, items: attachment_schema },
         created_at: { type: :string, format: 'date-time' },
         updated_at: { type: :string, format: 'date-time' }
       },
-      required: %w[id status effective_status attachments created_at updated_at]
+      required: %w[id visibility effective_visibility archived effectively_archived attachments created_at updated_at]
     }
   end
 
@@ -65,12 +67,13 @@ RSpec.describe 'Notes API', type: :request do
                   id: { type: :string, format: :uuid },
                   title: { type: :string, nullable: true },
                   body: { type: :string, nullable: true },
-                  status: { type: :string, enum: %w[personal published archived] },
+                  visibility: { type: :string, enum: %w[personal unlisted public] },
+                  archived: { type: :boolean },
                   attachments: { type: :array },
                   created_at: { type: :string, format: 'date-time' },
                   updated_at: { type: :string, format: 'date-time' }
                 },
-                required: %w[id status attachments created_at updated_at]
+                required: %w[id visibility archived attachments created_at updated_at]
               }
             }
           },
@@ -122,7 +125,7 @@ RSpec.describe 'Notes API', type: :request do
             properties: {
               title: { type: :string, example: 'My Note Title' },
               body: { type: :string, example: 'Note content here...' },
-              status: { type: :string, enum: %w[personal published archived], example: 'personal' },
+              visibility: { type: :string, enum: %w[personal unlisted public], example: 'personal' },
               attachment_ids: { type: :array, items: { type: :string }, description: 'Array of blob signed_ids' }
             }
           }
@@ -139,17 +142,18 @@ RSpec.describe 'Notes API', type: :request do
                 id: { type: :string, format: :uuid },
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
-                status: { type: :string, enum: %w[personal published archived] },
+                visibility: { type: :string, enum: %w[personal unlisted public] },
+                archived: { type: :boolean },
                 attachments: { type: :array },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id status attachments created_at updated_at]
+              required: %w[id visibility archived attachments created_at updated_at]
             }
           },
           required: %w[note]
 
-        let(:note_params) { { note: { title: 'Test Note', body: 'Test content', status: 'personal' } } }
+        let(:note_params) { { note: { title: 'Test Note', body: 'Test content', visibility: 'personal' } } }
 
         run_test!
       end
@@ -163,13 +167,14 @@ RSpec.describe 'Notes API', type: :request do
                 id: { type: :string, format: :uuid },
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
-                status: { type: :string, enum: %w[personal published archived] },
+                visibility: { type: :string, enum: %w[personal unlisted public] },
+                archived: { type: :boolean },
                 attachments: { type: :array }
               }
             }
           }
 
-        let(:note_params) { { note: { body: 'Content only', status: 'personal' } } }
+        let(:note_params) { { note: { body: 'Content only', visibility: 'personal' } } }
 
         run_test!
       end
@@ -183,10 +188,10 @@ RSpec.describe 'Notes API', type: :request do
         run_test!
       end
 
-      response '422', 'validation error - invalid status' do
+      response '422', 'validation error - invalid visibility' do
         schema '$ref' => '#/components/schemas/error_response'
 
-        let(:note_params) { { note: { title: 'Test', status: 'invalid_status' } } }
+        let(:note_params) { { note: { title: 'Test', visibility: 'invalid_visibility' } } }
 
         run_test!
       end
@@ -211,12 +216,13 @@ RSpec.describe 'Notes API', type: :request do
                 id: { type: :string, format: :uuid },
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
-                status: { type: :string, enum: %w[personal published archived] },
+                visibility: { type: :string, enum: %w[personal unlisted public] },
+                archived: { type: :boolean },
                 attachments: { type: :array },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id status attachments created_at updated_at]
+              required: %w[id visibility archived attachments created_at updated_at]
             }
           },
           required: %w[note]
@@ -270,7 +276,8 @@ RSpec.describe 'Notes API', type: :request do
             properties: {
               title: { type: :string },
               body: { type: :string },
-              status: { type: :string, enum: %w[personal published archived] },
+              visibility: { type: :string, enum: %w[personal unlisted public] },
+              archived: { type: :boolean },
               attachment_ids: { type: :array, items: { type: :string }, description: 'Array of blob signed_ids to attach' }
             }
           }
@@ -287,19 +294,20 @@ RSpec.describe 'Notes API', type: :request do
                 id: { type: :string, format: :uuid },
                 title: { type: :string, nullable: true },
                 body: { type: :string, nullable: true },
-                status: { type: :string, enum: %w[personal published archived] },
+                visibility: { type: :string, enum: %w[personal unlisted public] },
+                archived: { type: :boolean },
                 attachments: { type: :array },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id status attachments created_at updated_at]
+              required: %w[id visibility archived attachments created_at updated_at]
             }
           },
           required: %w[note]
 
         let(:note) { create(:note, user: user, title: 'Original Title') }
         let(:id) { note.id }
-        let(:note_params) { { note: { title: 'Updated Title', status: 'published' } } }
+        let(:note_params) { { note: { title: 'Updated Title', visibility: 'unlisted' } } }
 
         run_test!
       end
@@ -328,7 +336,7 @@ RSpec.describe 'Notes API', type: :request do
 
         let(:note) { create(:note, user: user) }
         let(:id) { note.id }
-        let(:note_params) { { note: { status: 'invalid_status' } } }
+        let(:note_params) { { note: { visibility: 'invalid_visibility' } } }
 
         run_test!
       end
@@ -383,7 +391,6 @@ RSpec.describe 'Notes API', type: :request do
             content_type: 'image/jpeg'
           )
           @note_with_attachment.attachments.attach(blob)
-          # Get the attachment's signed_id (not the blob's signed_id)
           @attachment_signed_id = @note_with_attachment.attachments.last.signed_id
         end
 
@@ -477,18 +484,18 @@ RSpec.describe 'Notes API', type: :request do
     end
 
     describe 'GET /notes response includes parent info' do
-      let!(:parent_note) { create(:note, user: user, status: :published) }
-      let!(:child_note) { create(:note, user: user, parent: parent_note, status: :personal) }
+      let!(:parent_note) { create(:note, user: user, visibility: :unlisted) }
+      let!(:child_note) { create(:note, user: user, parent: parent_note, visibility: :personal) }
 
-      it 'returns parent_note_id and effective_status' do
+      it 'returns parent_note_id and effective_visibility' do
         get "/notes/#{child_note.id}",
             headers: auth_header
 
         expect(response).to have_http_status(:ok)
         json = response.parsed_body
         expect(json['note']['parent_note_id']).to eq(parent_note.id)
-        expect(json['note']['effective_status']).to eq('published')
-        expect(json['note']['status']).to eq('personal')
+        expect(json['note']['effective_visibility']).to eq('unlisted')
+        expect(json['note']['visibility']).to eq('personal')
       end
     end
 
@@ -568,12 +575,12 @@ RSpec.describe 'Notes API', type: :request do
         favorited_note = create(:note, user: user, favorited_at: Time.current)
 
         patch "/notes/#{favorited_note.id}",
-              params: { note: { status: 'archived' } },
+              params: { note: { archived: true } },
               headers: auth_header
 
         expect(response).to have_http_status(:ok)
         json = response.parsed_body
-        expect(json['note']['status']).to eq('archived')
+        expect(json['note']['archived']).to be true
         expect(json['note']['favorited_at']).to be_nil
       end
 

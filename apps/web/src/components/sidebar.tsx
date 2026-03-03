@@ -32,7 +32,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateNote } from "@/hooks/use-create-note";
 import { SearchDialog } from "@/components/search-dialog";
-import { getNotes, deleteNote, updateNote, type Note } from "@/lib/api";
+import { getNotes, deleteNote, updateNote, type Note, type NoteVisibility } from "@/lib/api";
 import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 import {
   DropdownMenu,
@@ -47,6 +47,8 @@ interface NoteTreeNode {
   note: Note;
   children: Note[];
 }
+
+type SectionKey = "personal" | "unlisted" | "archived";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -77,10 +79,10 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
     queryFn: () => getNotes({ sort: "-created_at" }),
   });
 
-  // Mutation for updating note status
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: Note["status"] }) =>
-      updateNote(id, { status }),
+  // Mutation for updating note visibility (drag & drop between sections)
+  const updateVisibilityMutation = useMutation({
+    mutationFn: ({ id, update }: { id: string; update: { visibility?: NoteVisibility; archived?: boolean } }) =>
+      updateNote(id, update),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
@@ -95,19 +97,15 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
     })
   );
 
-  // Build tree structure: group notes by effective_status and organize parent-child
+  // Build tree structure: group notes by effective_visibility/archived and organize parent-child
   // Favorited notes appear at the top, sorted by created_at descending
   const sections = useMemo(() => {
     const sortByFavoriteAndCreated = (a: Note, b: Note): number => {
-      // Both favorited: sort by created_at descending
       if (a.favorited_at && b.favorited_at) {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
-      // Only a is favorited: a comes first
       if (a.favorited_at) return -1;
-      // Only b is favorited: b comes first
       if (b.favorited_at) return 1;
-      // Neither favorited: sort by created_at descending
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     };
 
@@ -125,15 +123,16 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
       }));
     };
 
-    // Use effective_status for grouping (inherits from parent)
-    const personalNotes = notes.filter((n) => n.effective_status === "personal");
-    const publishedNotes = notes.filter((n) => n.effective_status === "published");
-    const archivedNotes = notes.filter((n) => n.effective_status === "archived");
+    const archivedNotes = notes.filter((n) => n.effectively_archived);
+    const activeNotes = notes.filter((n) => !n.effectively_archived);
+    const personalNotes = activeNotes.filter((n) => n.effective_visibility === "personal");
+    // unlisted and public are both shown in the "Public" section
+    const publicNotes = activeNotes.filter((n) => n.effective_visibility === "unlisted" || n.effective_visibility === "public");
 
     return [
-      { key: "personal" as const, label: "Private", tree: buildTree(personalNotes) },
-      { key: "published" as const, label: "Public", tree: buildTree(publishedNotes) },
-      { key: "archived" as const, label: "Archived", tree: buildTree(archivedNotes) },
+      { key: "personal" as SectionKey, label: "Private", tree: buildTree(personalNotes) },
+      { key: "unlisted" as SectionKey, label: "Public", tree: buildTree(publicNotes) },
+      { key: "archived" as SectionKey, label: "Archived", tree: buildTree(archivedNotes) },
     ];
   }, [notes]);
 
@@ -151,12 +150,16 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
     if (!over) return;
 
     const noteId = active.id as string;
-    const newStatus = over.id as Note["status"];
+    const targetSection = over.id as SectionKey;
     const note = notes.find((n) => n.id === noteId);
+    if (!note) return;
 
-    // Only update if dropping on a different section
-    if (note && note.status !== newStatus) {
-      updateStatusMutation.mutate({ id: noteId, status: newStatus });
+    if (targetSection === "archived" && !note.archived) {
+      updateVisibilityMutation.mutate({ id: noteId, update: { archived: true } });
+    } else if (targetSection === "personal" && (note.visibility !== "personal" || note.archived)) {
+      updateVisibilityMutation.mutate({ id: noteId, update: { visibility: "personal", archived: false } });
+    } else if (targetSection === "unlisted" && (note.visibility === "personal" || note.archived)) {
+      updateVisibilityMutation.mutate({ id: noteId, update: { visibility: "unlisted", archived: false } });
     }
   };
 
@@ -227,9 +230,9 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
         <DragOverlay>
           {activeNote ? (
             <div className="flex items-center gap-2 px-3 py-1 text-sm rounded bg-[var(--workspace-active)] text-[var(--workspace-text-primary)] shadow-lg opacity-90">
-              {activeNote.status === "published" ? (
+              {activeNote.visibility !== "personal" ? (
                 <Globe size={18} />
-              ) : activeNote.status === "archived" ? (
+              ) : activeNote.archived ? (
                 <Archive size={18} />
               ) : (
                 <FileText size={18} />
@@ -251,7 +254,7 @@ function NoteSectionComponent({
   defaultExpanded = true,
   showNewButton = false,
 }: {
-  sectionKey: Note["status"];
+  sectionKey: SectionKey;
   label: string;
   tree: NoteTreeNode[];
   currentPath: string;
@@ -268,9 +271,8 @@ function NoteSectionComponent({
 
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
-  // Map section key to note status for creation
-  const getCreateStatus = (): Note["status"] => {
-    return sectionKey === "published" ? "published" : "personal";
+  const getCreateVisibility = (): NoteVisibility => {
+    return sectionKey === "unlisted" ? "unlisted" : "personal";
   };
 
   return (
@@ -300,7 +302,7 @@ function NoteSectionComponent({
           {showNewButton && (
             <button
               type="button"
-              onClick={() => createNoteMutation.mutate(getCreateStatus())}
+              onClick={() => createNoteMutation.mutate(getCreateVisibility())}
               disabled={createNoteMutation.isPending}
               className="flex items-center gap-2 px-3 py-1 text-sm text-[var(--workspace-text-tertiary)] hover:bg-[var(--workspace-hover)] hover:text-[var(--workspace-text-secondary)] rounded cursor-pointer transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -322,7 +324,7 @@ function NoteTreeItem({
 }: {
   node: NoteTreeNode;
   currentPath: string;
-  sectionKey: Note["status"];
+  sectionKey: SectionKey;
 }) {
   // Check if any child is currently active
   const hasActiveChild = node.children.some(
@@ -483,7 +485,7 @@ function NoteItemContent({
     e.stopPropagation();
     setMenuOpen(false);
     createNoteMutation.mutate({
-      status: note.effective_status === "published" ? "published" : "personal",
+      visibility: note.effective_visibility !== "personal" ? note.effective_visibility : "personal",
       parent_note_id: note.id,
     });
   };
@@ -496,8 +498,8 @@ function NoteItemContent({
   };
 
   const getIcon = () => {
-    if (note.effective_status === "published") return <Globe size={18} />;
-    if (note.effective_status === "archived") return <Archive size={18} />;
+    if (note.effective_visibility !== "personal") return <Globe size={18} />;
+    if (note.effectively_archived) return <Archive size={18} />;
     return <FileText size={18} />;
   };
 
@@ -570,7 +572,7 @@ function NoteItemContent({
             className="w-48 bg-[var(--workspace-sidebar)] border-[var(--workspace-border)]"
           >
             {/* Favorite toggle - not available for archived notes */}
-            {note.effective_status !== "archived" && (
+            {!note.effectively_archived && (
               <DropdownMenuItem
                 onClick={handleToggleFavorite}
                 disabled={favoriteMutation.isPending}
@@ -585,7 +587,7 @@ function NoteItemContent({
             )}
             {canAddChild && (
               <>
-                {note.effective_status !== "archived" && <DropdownMenuSeparator />}
+                {!note.effectively_archived && <DropdownMenuSeparator />}
                 <DropdownMenuItem
                   onClick={handleAddChild}
                   className="cursor-pointer"

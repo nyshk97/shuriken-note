@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_19_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_030522) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_bigm"
   enable_extension "pg_catalog.plpgsql"
@@ -45,19 +45,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_000000) do
   end
 
   create_table "notes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.boolean "archived", default: false, null: false
     t.text "body", default: "", null: false
     t.datetime "created_at", null: false
     t.datetime "favorited_at"
     t.uuid "parent_note_id"
-    t.string "status", default: "personal", null: false
     t.string "title", default: "", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "visibility", default: "personal", null: false
+    t.index [ "archived" ], name: "index_notes_on_archived"
     t.index [ "body" ], name: "index_notes_on_body_bigm", opclass: :gin_bigm_ops, using: :gin
     t.index [ "parent_note_id" ], name: "index_notes_on_parent_note_id"
-    t.index [ "status" ], name: "index_notes_on_status"
     t.index [ "title" ], name: "index_notes_on_title_bigm", opclass: :gin_bigm_ops, using: :gin
     t.index [ "user_id" ], name: "index_notes_on_user_id"
+    t.index [ "visibility" ], name: "index_notes_on_visibility"
   end
 
   create_table "refresh_tokens", force: :cascade do |t|

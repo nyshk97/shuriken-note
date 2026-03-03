@@ -13,12 +13,16 @@ export interface NoteAttachment {
 /** @deprecated Use NoteAttachment instead */
 export type NoteImage = NoteAttachment;
 
+export type NoteVisibility = "personal" | "unlisted" | "public";
+
 export interface Note {
   id: string; // UUID
   title: string;
   body: string;
-  status: "personal" | "published" | "archived";
-  effective_status: "personal" | "published" | "archived";
+  visibility: NoteVisibility;
+  effective_visibility: NoteVisibility;
+  archived: boolean;
+  effectively_archived: boolean;
   parent_note_id: string | null;
   favorited_at: string | null;
   attachments: NoteAttachment[];
@@ -29,7 +33,7 @@ export interface Note {
 export interface CreateNoteInput {
   title?: string;
   body?: string;
-  status?: Note["status"];
+  visibility?: NoteVisibility;
   parent_note_id?: string | null;
   attachment_ids?: string[]; // blob signed_ids
 }
@@ -37,7 +41,8 @@ export interface CreateNoteInput {
 export interface UpdateNoteInput {
   title?: string;
   body?: string;
-  status?: Note["status"];
+  visibility?: NoteVisibility;
+  archived?: boolean;
   parent_note_id?: string | null;
   favorited_at?: string | null;
   attachment_ids?: string[]; // blob signed_ids to attach
@@ -121,7 +126,7 @@ export interface PublicNote {
   id: string;
   title: string | null;
   body: string | null;
-  status: "published";
+  visibility: "unlisted" | "public";
   created_at: string;
   updated_at: string;
 }
@@ -132,7 +137,7 @@ interface PublicNoteResponse {
 
 /**
  * Get a published note by ID (no authentication required)
- * Returns 404 if note doesn't exist or is not published
+ * Returns 404 if note doesn't exist or is not accessible
  */
 export async function getPublicNote(id: string): Promise<PublicNote> {
   const response = await apiClient<PublicNoteResponse>(`/p/${id}`, {
