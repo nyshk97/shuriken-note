@@ -48,7 +48,7 @@ interface NoteTreeNode {
   children: Note[];
 }
 
-type SectionKey = "personal" | "unlisted" | "archived";
+type SectionKey = "personal" | "unlisted" | "blog" | "archived";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -126,12 +126,13 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
     const archivedNotes = notes.filter((n) => n.effectively_archived);
     const activeNotes = notes.filter((n) => !n.effectively_archived);
     const personalNotes = activeNotes.filter((n) => n.effective_visibility === "personal");
-    // unlisted and public are both shown in the "Public" section
-    const publicNotes = activeNotes.filter((n) => n.effective_visibility === "unlisted" || n.effective_visibility === "public");
+    const unlistedNotes = activeNotes.filter((n) => n.effective_visibility === "unlisted");
+    const blogNotes = activeNotes.filter((n) => n.effective_visibility === "public");
 
     return [
       { key: "personal" as SectionKey, label: "Private", tree: buildTree(personalNotes) },
-      { key: "unlisted" as SectionKey, label: "Public", tree: buildTree(publicNotes) },
+      { key: "unlisted" as SectionKey, label: "Public", tree: buildTree(unlistedNotes) },
+      { key: "blog" as SectionKey, label: "Blog", tree: buildTree(blogNotes) },
       { key: "archived" as SectionKey, label: "Archived", tree: buildTree(archivedNotes) },
     ];
   }, [notes]);
@@ -158,8 +159,10 @@ export function Sidebar({ isOpen = true }: SidebarProps) {
       updateVisibilityMutation.mutate({ id: noteId, update: { archived: true } });
     } else if (targetSection === "personal" && (note.visibility !== "personal" || note.archived)) {
       updateVisibilityMutation.mutate({ id: noteId, update: { visibility: "personal", archived: false } });
-    } else if (targetSection === "unlisted" && (note.visibility === "personal" || note.archived)) {
+    } else if (targetSection === "unlisted" && (note.visibility !== "unlisted" || note.archived)) {
       updateVisibilityMutation.mutate({ id: noteId, update: { visibility: "unlisted", archived: false } });
+    } else if (targetSection === "blog" && (note.visibility !== "public" || note.archived)) {
+      updateVisibilityMutation.mutate({ id: noteId, update: { visibility: "public", archived: false } });
     }
   };
 
@@ -272,7 +275,9 @@ function NoteSectionComponent({
   const toggleExpanded = () => setIsExpanded((prev) => !prev);
 
   const getCreateVisibility = (): NoteVisibility => {
-    return sectionKey === "unlisted" ? "unlisted" : "personal";
+    if (sectionKey === "unlisted") return "unlisted";
+    if (sectionKey === "blog") return "public";
+    return "personal";
   };
 
   return (
