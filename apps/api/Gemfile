@@ -68,4 +68,4 @@ group :development, :test do
   gem 'rswag-specs'
 end
 
-gem "kaminari", "~> 1.2"
+gem 'kaminari', '~> 1.2'
