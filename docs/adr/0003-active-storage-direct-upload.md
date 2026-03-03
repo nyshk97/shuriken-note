@@ -3,7 +3,7 @@
 Date: 2026-01-11
 
 ## Status
-Proposed
+Accepted
 
 ---
 
@@ -17,6 +17,21 @@ Since image uploads occur from both Web (Next.js) and iOS (SwiftUI) clients, the
 - Avoid excessive load on the application server (bandwidth, CPU, memory)
 - Keep operations simple and maintenance costs low
 - Assume a standard S3-compatible object storage
+
+### Development environment storage
+
+The original plan included MinIO (S3-compatible object storage) for local development
+to mirror the production Direct Upload flow.
+However, MinIO's OSS edition ceased maintenance in February 2026:
+Docker Hub image distribution was stopped in October 2025,
+and the GitHub repository was archived in February 2026.
+
+Given this, the development environment continues to use Rails Active Storage's
+Disk service. This means the Direct Upload flow in development uploads to the
+local API server rather than an external S3-compatible endpoint.
+Community forks (e.g., pgsty/minio) and LocalStack exist as alternatives,
+but the added complexity is not justified for a single-developer project
+where the production S3 configuration is already fully provisioned via Terraform.
 
 Under these conditions, we considered:
 
@@ -114,7 +129,15 @@ Under these conditions, we considered:
 
 ## Notes
 
-- Storage is assumed to be S3-compatible (e.g., AWS S3)
+- Production storage is AWS S3 with CloudFront CDN, provisioned via Terraform
+  (S3 bucket, CORS, OAC, CloudFront distribution, IAM task role)
+
+- Development and test environments use Active Storage's Disk service.
+  A local S3 mock (MinIO) was considered but not adopted due to
+  the MinIO OSS discontinuation (see Context section above)
+
+- CORS `allowed_origins` on the S3 bucket is currently set to `"*"` and
+  must be restricted to the production frontend domain once acquired
 
 - The Direct Upload flow follows these three steps:
 
