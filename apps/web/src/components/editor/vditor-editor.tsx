@@ -425,6 +425,15 @@ export function VditorEditor({
     if (!editorRef.current) return;
 
     switch (action) {
+      case "bold": {
+        const selection = editorRef.current.getSelection();
+        if (selection) {
+          editorRef.current.updateValue(`**${selection}**`);
+        } else {
+          editorRef.current.insertValue("****");
+        }
+        break;
+      }
       case "strikethrough": {
         const selection = editorRef.current.getSelection();
         if (selection) {
