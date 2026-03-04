@@ -160,7 +160,6 @@ The following infrastructure configuration is adopted.
 **Cons**
 
 - Server management overhead (OS updates, Docker maintenance)
-- Less demonstrable cloud architecture skills for portfolio purposes
 - Limited scalability without additional configuration
 
 ---
@@ -173,7 +172,6 @@ The following infrastructure configuration is adopted.
 - Reproducible infrastructure enables easier long-term evolution
 - A standard cloud architecture with availability and fault tolerance is achieved
 - Cost-optimized by avoiding NAT Gateway (~$30-45/month savings)
-- Portfolio value: demonstrates AWS ECS, ALB, CloudFront, Terraform skills
 
 ### Negative / Constraints
 
