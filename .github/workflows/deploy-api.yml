@@ -42,7 +42,7 @@ jobs:
           ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
 
       - name: Add VPS to known_hosts
-        run: ssh-keyscan -H 198.13.52.210 >> ~/.ssh/known_hosts
+        run: ssh-keyscan -t ed25519 198.13.52.210 >> ~/.ssh/known_hosts
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
