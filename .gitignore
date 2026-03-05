@@ -27,6 +27,9 @@ apps/api/storage/*
 apps/api/config/master.key
 apps/api/config/credentials/*.key
 
+# Kamal - Ignore local secrets
+apps/api/.kamal/.env
+
 # Rails - Ignore precompiled assets (not applicable for API-only, but good to have)
 apps/api/public/assets
 
