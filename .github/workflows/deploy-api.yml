@@ -9,56 +9,65 @@ on:
       - ".github/workflows/deploy-api.yml"
   workflow_dispatch:
 
-concurrency:
-  group: deploy-api
-  cancel-in-progress: false
-
-defaults:
-  run:
-    working-directory: apps/api
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: shuriken-note-api
+  ECS_CLUSTER: shuriken-note-production-cluster
+  ECS_SERVICE: shuriken-note-production-api
+  CONTAINER_NAME: api
 
 jobs:
   deploy:
-    name: Deploy via Kamal
+    name: Deploy to ECS
     runs-on: ubuntu-latest
-
-    env:
-      DOCKER_BUILDKIT: 1
+    # Only run after CI passes
+    needs: []
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          ruby-version-file: apps/api/.ruby-version
-          bundler-cache: true
-          working-directory: apps/api
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Set up SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Add VPS to known_hosts
-        run: ssh-keyscan -H 198.13.52.210 >> ~/.ssh/known_hosts
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Write Kamal secrets
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        working-directory: apps/api
         env:
-          KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          printf "KAMAL_REGISTRY_PASSWORD=%s\nPOSTGRES_PASSWORD=%s\nAWS_ACCESS_KEY_ID=%s\nAWS_SECRET_ACCESS_KEY=%s\n" \
-            "$KAMAL_REGISTRY_PASSWORD" "$POSTGRES_PASSWORD" "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" \
-            > .kamal/.env
-          printf "%s" "$RAILS_MASTER_KEY" > config/master.key
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Deploy with Kamal
-        run: bundle exec kamal deploy
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition shuriken-note-production-api \
+            --query taskDefinition \
+            > task-definition.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
