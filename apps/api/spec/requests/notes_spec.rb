@@ -383,22 +383,20 @@ RSpec.describe 'Notes API', type: :request do
       security [ bearer_auth: [] ]
 
       response '204', 'attachment detached' do
-        before do
-          @note_with_attachment = create(:note, user: user)
-          blob = ActiveStorage::Blob.create_and_upload!(
+        let!(:target_note) { create(:note, user: user) }
+        let!(:target_blob) do
+          ActiveStorage::Blob.create_and_upload!(
             io: StringIO.new('fake file data'),
             filename: 'test.jpg',
             content_type: 'image/jpeg'
           )
-          @note_with_attachment.attachments.attach(blob)
-          @attachment_signed_id = @note_with_attachment.attachments.last.signed_id
         end
-
-        let(:note_id) { @note_with_attachment.id }
-        let(:signed_id) { @attachment_signed_id }
+        let!(:attach_file) { target_note.attachments.attach(target_blob) }
+        let(:note_id) { target_note.id }
+        let(:signed_id) { target_note.reload.attachments.last.signed_id }
 
         run_test! do
-          expect(@note_with_attachment.reload.attachments.count).to eq(0)
+          expect(target_note.reload.attachments.count).to eq(0)
         end
       end
 
