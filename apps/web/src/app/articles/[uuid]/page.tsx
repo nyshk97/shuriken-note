@@ -43,10 +43,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = article.title || "Untitled";
   const description = article.body
     ? article.body.slice(0, 160).replace(/[#*`\n]/g, " ").trim() + (article.body.length > 160 ? "..." : "")
-    : "An article on Shuriken Note";
+    : "An article by DAN";
 
   return {
-    title: `${title} — Shuriken Note`,
+    title: `${title} — DAN`,
     description,
     openGraph: {
       title,
@@ -106,7 +106,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
         <footer className="mt-12 pt-6 border-t border-gray-200 flex items-center justify-between">
           <p className="text-sm text-gray-400">
-            Published on Shuriken Note
+            Published by DAN
           </p>
           <Link
             href="/articles"

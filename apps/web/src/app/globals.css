@@ -127,6 +127,11 @@
   }
 }
 
+/* Social link hover: use brand color if set, otherwise default gray-900 */
+.social-link:hover {
+  color: var(--brand-color, #111827);
+}
+
 /* Login page styles */
 .login-page {
   --login-bg: #0f0f0f;

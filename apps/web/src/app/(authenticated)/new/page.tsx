@@ -2,6 +2,6 @@
 
 import { NewNoteForm } from "@/components/new-note-form";
 
-export default function NotesNewPage() {
+export default function NewPage() {
   return <NewNoteForm />;
 }

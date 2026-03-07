@@ -23,7 +23,7 @@ export function useCreateNote() {
       if (options.parent_note_id) params.set("parent", options.parent_note_id);
 
       const query = params.toString();
-      router.push(`/notes/new${query ? `?${query}` : ""}`);
+      router.push(`/new${query ? `?${query}` : ""}`);
     },
     isPending: false,
   };

@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // Extract first 160 characters of body for description
   const description = note.body
     ? note.body.slice(0, 160).replace(/[#*`\n]/g, " ").trim() + (note.body.length > 160 ? "..." : "")
-    : "A note on Shuriken Note";
+    : "A note by DAN";
 
   return {
     title,
@@ -105,7 +105,7 @@ export default async function PublicNotePage({ params }: PageProps) {
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-gray-200">
           <p className="text-sm text-gray-400">
-            Published on Shuriken Note
+            Published by DAN
           </p>
         </footer>
       </div>
