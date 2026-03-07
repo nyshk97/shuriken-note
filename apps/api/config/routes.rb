@@ -27,6 +27,9 @@ Rails.application.routes.draw do
   # Public notes (no authentication required)
   get 'p/:id', to: 'public_notes#show', as: :public_note
 
+  # OGP metadata (no authentication required)
+  get 'ogp', to: 'ogp#show'
+
   # Public articles (no authentication required)
   resources :articles, only: %i[index show]
 end
