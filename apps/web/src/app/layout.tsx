@@ -28,8 +28,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://d0ne1s.com"),
   title: "Shuriken Note",
   description: "A personal note-taking app",
+  openGraph: {
+    siteName: "DAN",
+  },
 };
 
 export default function RootLayout({

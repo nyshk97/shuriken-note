@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const article = await getArticle(uuid);
 
   if (!article) {
-    return { title: "Article Not Found" };
+    return { title: "Article Not Found", robots: { index: false, follow: false } };
   }
 
   const title = article.title || "Untitled";

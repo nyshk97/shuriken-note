@@ -41,6 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!note) {
     return {
       title: "Note Not Found",
+      robots: { index: false, follow: false },
     };
   }
 
@@ -53,6 +54,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    robots: { index: false, follow: false },
     openGraph: {
       title,
       description,
