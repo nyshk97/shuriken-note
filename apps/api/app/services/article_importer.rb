@@ -49,7 +49,7 @@ class ArticleImporter
 
   def scan_asset_dirs
     Dir.glob(File.join(@import_dir, '*/')).each_with_object(Set.new) do |dir, set|
-      set << File.basename(dir)
+      set << File.basename(dir).unicode_normalize(:nfc)
     end
   end
 
