@@ -73,29 +73,32 @@ export default async function ArticlePage({ params }: PageProps) {
 
   const formattedDate = new Date(article.created_at).toLocaleDateString("en-US", {
     year: "numeric",
-    month: "long",
+    month: "short",
     day: "numeric",
   });
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <nav className="mb-8">
+    <div
+      className="min-h-screen bg-white antialiased"
+      style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}
+    >
+      <div className="mx-auto max-w-2xl px-6 py-20">
+        <nav className="mb-12">
           <Link
             href="/articles"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            className="text-[10px] font-medium uppercase tracking-[0.2em] text-gray-400 hover:text-gray-900 transition-colors"
           >
             &larr; All articles
           </Link>
         </nav>
 
-        <header className="mb-8">
+        <header className="mb-10">
           {article.title && (
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-3">
               {article.title}
             </h1>
           )}
-          <time className="text-sm text-gray-500" dateTime={article.created_at}>
+          <time className="text-xs text-gray-400" dateTime={article.created_at}>
             {formattedDate}
           </time>
         </header>
@@ -104,13 +107,13 @@ export default async function ArticlePage({ params }: PageProps) {
           <MarkdownViewer content={article.body || ""} variant="public" />
         </main>
 
-        <footer className="mt-12 pt-6 border-t border-gray-200 flex items-center justify-between">
-          <p className="text-sm text-gray-400">
-            Published by DAN
+        <footer className="mt-16 border-t border-gray-200 pt-8 flex items-center justify-between">
+          <p className="text-[10px] tracking-[0.15em] text-gray-300">
+            d0ne1s
           </p>
           <Link
             href="/articles"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            className="text-[10px] font-medium uppercase tracking-[0.2em] text-gray-400 hover:text-gray-900 transition-colors"
           >
             &larr; All articles
           </Link>

@@ -210,7 +210,7 @@ function ArticleCardLight({ article }: { article: ArticleSummary }) {
     <article>
       <Link href={`/articles/${article.id}`} className="group block">
         <div className="flex items-baseline justify-between gap-4">
-          <h3 className="text-sm font-medium text-gray-800 group-hover:text-gray-900 transition-colors">
+          <h3 className="text-base font-medium text-gray-800 group-hover:text-gray-900 transition-colors">
             {article.title || "Untitled"}
           </h3>
           <time
