@@ -27,9 +27,13 @@ export function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 
-  // Redirect to default landing if accessing auth route while authenticated
-  if (isAuthRoute && hasRefreshToken) {
-    return NextResponse.redirect(new URL(DEFAULT_LANDING_PATH, request.url));
+  if (isAuthRoute) {
+    // Redirect to default landing if already authenticated
+    if (hasRefreshToken) {
+      return NextResponse.redirect(new URL(DEFAULT_LANDING_PATH, request.url));
+    }
+    // Allow unauthenticated users to access auth routes (login page, etc.)
+    return NextResponse.next();
   }
 
   // All other routes require authentication
