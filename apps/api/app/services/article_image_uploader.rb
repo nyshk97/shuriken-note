@@ -67,12 +67,19 @@ class ArticleImageUploader
 
   def resolve_file_path(decoded_path)
     if File.extname(decoded_path).downcase == HEIC_EXT
-      png_path = File.join(@import_dir, decoded_path.sub(/#{Regexp.escape(HEIC_EXT)}\z/i, PNG_EXT))
-      return png_path if File.exist?(png_path)
+      png_path = find_with_normalization(decoded_path.sub(/#{Regexp.escape(HEIC_EXT)}\z/i, PNG_EXT))
+      return png_path if png_path
     end
 
-    full_path = File.join(@import_dir, decoded_path)
+    find_with_normalization(decoded_path)
+  end
+
+  def find_with_normalization(relative_path)
+    full_path = File.join(@import_dir, relative_path)
     return full_path if File.exist?(full_path)
+
+    nfd_path = File.join(@import_dir, relative_path.unicode_normalize(:nfd))
+    return nfd_path if File.exist?(nfd_path)
 
     nil
   end
