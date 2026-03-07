@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_JP, Inter, Playfair_Display } from "next/font/google";
+import { Noto_Sans_JP, Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -21,6 +21,12 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
 });
 
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Shuriken Note",
   description: "A personal note-taking app",
@@ -34,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="ja" className="dark">
       <body
-        className={`${notoSansJP.variable} ${inter.variable} ${playfairDisplay.variable} font-sans antialiased`}
+        className={`${notoSansJP.variable} ${inter.variable} ${playfairDisplay.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

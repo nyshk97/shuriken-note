@@ -1,5 +1,5 @@
 /**
  * Default landing path after authentication.
- * Users are redirected here after login or when accessing the root path.
+ * Users are redirected here after login.
  */
-export const DEFAULT_LANDING_PATH = "/notes/new?visibility=personal";
+export const DEFAULT_LANDING_PATH = "/new?visibility=personal";

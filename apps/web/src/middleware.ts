@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 
-// Routes that require authentication
-const protectedRoutes = ["/"];
-
 // Routes that are public (no authentication required)
 const publicRoutes = ["/p", "/articles"];
 
@@ -20,36 +17,26 @@ export function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 
-  // Public routes bypass authentication check
-  if (isPublicRoute) {
+  // Public routes and root page bypass authentication check
+  if (isPublicRoute || pathname === "/") {
     return NextResponse.next();
   }
-
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some(
-    (route) => pathname === route || pathname.startsWith(route + "/")
-  );
 
   // Check if the route is an auth route (login, etc.)
   const isAuthRoute = authRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/")
   );
 
-  // Redirect to login if accessing protected route without auth
-  if (isProtectedRoute && !hasRefreshToken) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
   // Redirect to default landing if accessing auth route while authenticated
   if (isAuthRoute && hasRefreshToken) {
     return NextResponse.redirect(new URL(DEFAULT_LANDING_PATH, request.url));
   }
 
-  // Redirect root to default landing page
-  if (pathname === "/" && hasRefreshToken) {
-    return NextResponse.redirect(new URL(DEFAULT_LANDING_PATH, request.url));
+  // All other routes require authentication
+  if (!hasRefreshToken) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();

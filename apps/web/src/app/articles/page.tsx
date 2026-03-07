@@ -1,15 +1,8 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { ArticleCard, type ArticleSummary } from "@/components/article-card";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-
-interface ArticleSummary {
-  id: string;
-  title: string;
-  excerpt: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface PaginationMeta {
   current_page: number;
@@ -39,11 +32,11 @@ async function getArticles(page = 1): Promise<ArticlesResponse | null> {
 }
 
 export const metadata: Metadata = {
-  title: "Articles — Shuriken Note",
-  description: "Published articles on Shuriken Note",
+  title: "Articles — DAN",
+  description: "Published articles by DAN",
   openGraph: {
-    title: "Articles — Shuriken Note",
-    description: "Published articles on Shuriken Note",
+    title: "Articles — DAN",
+    description: "Published articles by DAN",
     type: "website",
   },
 };
@@ -88,40 +81,11 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
 
         <footer className="mt-16 pt-6 border-t border-gray-200">
           <p className="text-sm text-gray-400">
-            Shuriken Note
+            DAN
           </p>
         </footer>
       </div>
     </div>
-  );
-}
-
-function ArticleCard({ article }: { article: ArticleSummary }) {
-  const formattedDate = new Date(article.created_at).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  return (
-    <article>
-      <Link
-        href={`/articles/${article.id}`}
-        className="block group"
-      >
-        <h2 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-          {article.title || "Untitled"}
-        </h2>
-        <time className="text-sm text-gray-400 mt-1 block" dateTime={article.created_at}>
-          {formattedDate}
-        </time>
-        {article.excerpt && (
-          <p className="mt-2 text-gray-600 leading-relaxed">
-            {article.excerpt}
-          </p>
-        )}
-      </Link>
-    </article>
   );
 }
 
