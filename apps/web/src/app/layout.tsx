@@ -34,6 +34,9 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: "DAN",
   },
+  twitter: {
+    site: "@d0ne1s",
+  },
 };
 
 export default function RootLayout({
