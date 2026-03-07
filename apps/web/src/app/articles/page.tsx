@@ -60,11 +60,20 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
   const meta = data?.meta ?? { current_page: 1, total_pages: 1, total_count: 0, per_page: 20 };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-3xl px-6 py-12">
+    <div
+      className="min-h-screen bg-white antialiased"
+      style={{ fontFamily: "var(--font-inter), Inter, sans-serif" }}
+    >
+      <div className="mx-auto max-w-2xl px-6 py-20">
         <header className="mb-12">
-          <h1 className="text-4xl font-bold text-gray-900">Articles</h1>
-          <p className="mt-2 text-gray-500">
+          <Link
+            href="/"
+            className="mb-8 inline-block text-[10px] font-medium uppercase tracking-[0.2em] text-gray-400 hover:text-gray-900 transition-colors"
+          >
+            &larr; Home
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Articles</h1>
+          <p className="mt-2 text-sm text-gray-500">
             {meta.total_count} {meta.total_count === 1 ? "article" : "articles"} published
           </p>
         </header>
@@ -85,9 +94,9 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
           <Pagination currentPage={meta.current_page} totalPages={meta.total_pages} />
         )}
 
-        <footer className="mt-16 pt-6 border-t border-gray-200">
-          <p className="text-sm text-gray-400">
-            DAN
+        <footer className="mt-16 border-t border-gray-200 pt-8">
+          <p className="text-[10px] tracking-[0.15em] text-gray-300">
+            d0ne1s
           </p>
         </footer>
       </div>
