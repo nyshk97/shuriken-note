@@ -143,6 +143,28 @@ RSpec.describe ArticleImageUploader do
       expect(note.attachments.first.filename.to_s).to eq('photo.png')
     end
 
+    it 'handles Notion bookmark exports with nested markdown in alt text' do
+      create_image('Bookmark Article', 'preview.png')
+
+      bookmark_ref = "![[https://example.com/product](https://example.com/product)](#{encoded_path('Bookmark Article', 'preview.png')})"
+      note = create(:note, :unlisted, user: user,
+        title: 'Bookmark Article',
+        body: "Some text\n\n#{bookmark_ref}\n\nMore text")
+
+      result = described_class.new(import_dir: tmpdir, user: user).call
+
+      expect(result.updated_count).to eq(1)
+      expect(result.failures).to be_empty
+
+      note.reload
+      expect(note.visibility).to eq('public')
+      expect(note.body).not_to include('example.com/product')
+      expect(note.body).to match(%r{!\[preview\]\(http.+\)})
+      expect(note.body).to include('Some text')
+      expect(note.body).to include('More text')
+      expect(note.attachments.count).to eq(1)
+    end
+
     it 'is idempotent — re-running skips already processed notes' do
       create_image('Idem', 'img.png')
 

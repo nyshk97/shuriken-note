@@ -6,7 +6,9 @@ class ArticleImageUploader
   Result = Data.define(:updated_count, :skipped_count, :failures)
   Failure = Data.define(:title, :error)
 
-  IMAGE_REF_PATTERN = /!\[([^\]]*)\]\(([^)]+)\)/
+  # Greedy .* in alt-text group to handle Notion bookmark exports
+  # where alt contains nested markdown links: ![[text](url)](local_path)
+  IMAGE_REF_PATTERN = /!\[(.*)\]\(([^)]+)\)/
   HEIC_EXT = '.heic'
   PNG_EXT = '.png'
 
@@ -43,12 +45,17 @@ class ArticleImageUploader
   private
 
   def extract_local_image_refs(body)
-    body.scan(IMAGE_REF_PATTERN).filter_map do |alt, encoded_path|
+    matches = []
+    body.scan(IMAGE_REF_PATTERN) do
+      full_match = Regexp.last_match[0]
+      alt = Regexp.last_match[1]
+      encoded_path = Regexp.last_match[2]
       decoded = URI::DEFAULT_PARSER.unescape(encoded_path)
       next if decoded.start_with?('http')
 
-      { alt:, encoded_path:, decoded_path: decoded }
+      matches << { alt:, encoded_path:, decoded_path: decoded, full_match: }
     end
+    matches
   end
 
   def upload_and_rewrite(note, refs)
@@ -59,7 +66,8 @@ class ArticleImageUploader
       raise "Image not found: #{ref[:decoded_path]}" unless file_path
 
       public_url = attach_and_get_url(note, file_path)
-      body = body.gsub("(#{ref[:encoded_path]})", "(#{public_url})")
+      filename = File.basename(ref[:decoded_path], File.extname(ref[:decoded_path]))
+      body = body.gsub(ref[:full_match], "![#{filename}](#{public_url})")
     end
 
     body
