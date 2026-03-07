@@ -209,7 +209,7 @@ export function AppHeader({ sidebarOpen, onToggleSidebar }: AppHeaderProps) {
             {/* Open public page button (for unlisted or public notes) */}
             {note.visibility !== "personal" && (
               <a
-                href={`/p/${note.id}`}
+                href={note.visibility === "public" ? `/articles/${note.id}` : `/p/${note.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 px-2 py-0.5 text-xs text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] hover:text-[var(--workspace-text-primary)] rounded transition-colors"
