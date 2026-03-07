@@ -30,6 +30,7 @@ env:
     WEB_CONCURRENCY: 1
     S3_BUCKET_NAME: shuriken-note-storage-production
     AWS_REGION: ap-northeast-1
+    CLOUDFRONT_HOST: d1dnvitqqygobe.cloudfront.net
   secret:
     - RAILS_MASTER_KEY
     - DATABASE_URL
