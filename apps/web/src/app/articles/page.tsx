@@ -34,10 +34,16 @@ async function getArticles(page = 1): Promise<ArticlesResponse | null> {
 export const metadata: Metadata = {
   title: "Articles — DAN",
   description: "Published articles by DAN",
+  robots: { index: false, follow: true },
   openGraph: {
     title: "Articles — DAN",
     description: "Published articles by DAN",
     type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Articles — DAN",
+    description: "Published articles by DAN",
   },
 };
 

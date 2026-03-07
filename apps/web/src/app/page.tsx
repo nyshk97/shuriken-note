@@ -33,6 +33,11 @@ export const metadata: Metadata = {
     description: "Ruby Developer / Web Services Manager / Songwriter / Boxer",
     type: "website",
   },
+  twitter: {
+    card: "summary",
+    title: "DAN",
+    description: "Ruby Developer / Web Services Manager / Songwriter / Boxer",
+  },
 };
 
 const socialLinks = [
