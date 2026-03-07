@@ -19,6 +19,25 @@ namespace :import do
 
     exit(1) if result.failures.any?
   end
+
+  desc 'Upload images for unlisted migrated articles and make them public'
+  task article_images: :environment do
+    import_dir = resolve_import_dir
+    user = User.find_by!(email: ENV.fetch('USER_EMAIL'))
+
+    puts "Import dir: #{import_dir}"
+    puts "User: #{user.email}"
+    puts '---'
+
+    result = ArticleImageUploader.new(import_dir:, user:).call
+
+    puts "Updated: #{result.updated_count}"
+    puts "Skipped: #{result.skipped_count}"
+    puts "Failed:  #{result.failures.count}"
+    result.failures.each { |f| puts "  #{f.title}: #{f.error}" }
+
+    exit(1) if result.failures.any?
+  end
 end
 
 def resolve_import_dir
