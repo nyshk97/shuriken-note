@@ -1,0 +1,92 @@
+[tools]
+node = "24"
+terraform = "1"
+
+# ---------- Development lifecycle ----------
+
+[tasks.up]
+description = "Start API (Docker) and Web (Next.js) servers"
+run = """
+docker compose up -d
+mkdir -p apps/web/log
+npm run dev --prefix apps/web > apps/web/log/dev.log 2>&1 &
+echo "API: http://localhost:3000 (log: apps/api/log/development.log)"
+echo "Web: http://localhost:3001 (log: apps/web/log/dev.log)"
+"""
+
+[tasks.stop]
+description = "Stop API and Web servers"
+run = """
+lsof -ti:3001 | xargs kill -9 2>/dev/null || true
+docker compose stop
+"""
+
+[tasks.restart]
+description = "Restart API and Web servers"
+depends = ["stop", "up"]
+
+# ---------- Docker shortcuts ----------
+
+[tasks.bash]
+description = "Open bash in API container"
+run = "docker compose exec api bash"
+
+[tasks.bundle]
+description = "Install gems via bundler"
+run = "docker compose run --rm api bundle install"
+
+[tasks.console]
+description = "Open Rails console"
+run = "docker compose exec api bin/rails console"
+
+[tasks.migrate]
+description = "Run database migrations"
+run = "docker compose exec api bin/rails db:migrate"
+
+[tasks.credentials]
+description = "Edit Rails encrypted credentials"
+run = "docker compose exec -e EDITOR=vim api bin/rails credentials:edit"
+
+# ---------- Testing & docs ----------
+
+[tasks.rspec]
+description = "Run RSpec test suite"
+run = "docker compose exec -e RAILS_ENV=test api bundle exec rspec"
+
+[tasks.swagger]
+description = "Generate OpenAPI / Swagger documentation"
+run = "docker compose exec -e RAILS_ENV=test api bundle exec rake rswag:specs:swaggerize"
+
+[tasks.lint]
+description = "Run linters (Rubocop + ESLint)"
+run = """
+echo "==> Rubocop"
+docker compose exec api bin/rubocop
+echo "==> ESLint"
+npm run lint --prefix apps/web
+"""
+
+# ---------- Setup ----------
+
+[tasks.setup]
+description = "Full project setup (install deps + prepare DB)"
+depends = ["bundle", "setup:web", "setup:db"]
+
+[tasks."setup:web"]
+description = "Install web dependencies"
+run = "npm install --prefix apps/web"
+
+[tasks."setup:db"]
+description = "Create and migrate database"
+run = """
+docker compose exec api bin/rails db:create
+docker compose exec api bin/rails db:migrate
+"""
+
+[tasks."install-githooks"]
+description = "Install git hooks"
+run = """
+cp scripts/hooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+echo "Git hooks installed."
+"""
