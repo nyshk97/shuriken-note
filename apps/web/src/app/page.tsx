@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { type ArticleSummary } from "@/components/article-card";
+import { DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -32,6 +33,7 @@ export const metadata: Metadata = {
     title: "DAN",
     description: "Ruby Developer / Web Services Manager / Songwriter / Boxer",
     type: "website",
+    ...(DEFAULT_OG_IMAGE && { images: [DEFAULT_OG_IMAGE] }),
   },
   twitter: {
     card: "summary",

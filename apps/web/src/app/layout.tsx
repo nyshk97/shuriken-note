@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_JP, Inter, Playfair_Display, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 const notoSansJP = Noto_Sans_JP({
   subsets: ["latin"],
@@ -33,6 +34,7 @@ export const metadata: Metadata = {
   description: "A personal note-taking app",
   openGraph: {
     siteName: "DAN",
+    ...(DEFAULT_OG_IMAGE && { images: [DEFAULT_OG_IMAGE] }),
   },
   twitter: {
     site: "@d0ne1s",
