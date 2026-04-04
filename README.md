@@ -70,6 +70,7 @@ apps/
 ### Prerequisites
 
 - Docker & Docker Compose
+- [mise](https://mise.jdx.dev/) (task runner & version manager)
 
 ### Setup
 
@@ -77,8 +78,17 @@ apps/
 git clone https://github.com/nyshk97/shuriken-note.git
 cd shuriken-note
 
+cp apps/web/.env.example apps/web/.env.local
 docker compose up -d
-docker compose exec api bin/rails db:setup
+mise run setup
+```
+
+### Start
+
+```bash
+mise run up
+# API: http://localhost:3000
+# Web: http://localhost:3001
 ```
 
 ### Credentials
