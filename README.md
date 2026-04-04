@@ -1,30 +1,22 @@
 # Shuriken Note
 
-## Overview
-**Shuriken Note** is a personal note system designed around my own needs, stripping away unnecessary features from modern note-taking tools to stay simple, fast, and distraction-free.
+A personal note-taking app built for speed, simplicity, and focus — stripping away unnecessary features from modern note tools.
 
-The application is used and improved continuously in daily practice,
-and major technical decisions are documented as ADRs (Architecture Decision Records).
+Used daily and continuously improved. All major technical decisions are documented as [ADRs](#design-decisions-adr).
 
----
-
-## Product Vision
-
-The product philosophy and design intent of Shuriken Note are documented here:
-
-- [Product Vision](https://github.com/nyshk97/shuriken-note/blob/main/docs/product/vision.md)
-
----
-
-## Try Demo
-
-*Public demo environment will be available soon.*
+> **[Product Vision](docs/product/vision.md)** · **[Feature Matrix](docs/product/features.md)** · **[Tech Stack](docs/engineering/tech-stack.md)** · **[Contributing](CONTRIBUTING.md)**
 
 ---
 
 ## Key Features
 
-*This section will be updated as implementation progresses.*
+- **In-place Markdown editing** — WYSIWYG-style rendering without split preview ([ADR 0010](docs/adr/0010-markdown-editor-selection.md))
+- **Auto-save** — changes persist automatically every few seconds, no manual save
+- **Full-text search** — powered by PostgreSQL + pg_bigm for Japanese support ([ADR 0002](docs/adr/0002-postgres-fts.md))
+- **Public note publishing** — share individual notes as read-only public pages
+- **Note lifecycle management** — private / public / archived states with clear transitions ([ADR 0012](docs/adr/0012-note-visibility-and-lifecycle.md))
+- **Image upload** — drag-and-drop via Active Storage Direct Upload to S3 ([ADR 0003](docs/adr/0003-active-storage-direct-upload.md))
+- **OpenAPI documentation** — API specs auto-generated from RSpec via rswag ([ADR 0001](docs/adr/0001-rest-openapi.md))
 
 ---
 
@@ -33,7 +25,6 @@ The product philosophy and design intent of Shuriken Note are documented here:
 ```mermaid
 flowchart TD
   Web["Next.js (Vercel)"]
-  IOS["iOS App"]
   CF["CloudFront"]
   ALB["Application Load Balancer"]
   API["Rails API (ECS Fargate)"]
@@ -41,85 +32,38 @@ flowchart TD
   S3[("S3 Storage")]
 
   Web --> CF --> ALB --> API --> DB
-  IOS --> CF
   API --> S3
   Web --> S3
-
 ```
 
-* Web frontend: Next.js on Vercel
-* Backend API: Ruby on Rails on ECS Fargate
-* Database: PostgreSQL on RDS
-* File Storage: S3 (Active Storage Direct Upload)
-* CDN / TLS: CloudFront + ACM
-* Infrastructure as Code: Terraform
+| Layer        | Technology                                   |
+| ------------ | -------------------------------------------- |
+| Frontend     | Next.js 15 · TypeScript · Tailwind CSS · shadcn/ui |
+| Backend      | Ruby on Rails 8 (API mode) · RSpec · rswag   |
+| Database     | PostgreSQL 17 + pg_bigm                      |
+| File Storage | AWS S3 (Active Storage Direct Upload)        |
+| CDN / TLS    | CloudFront + ACM                             |
+| IaC          | Terraform                                    |
+| Observability| Sentry · CloudWatch Logs                     |
 
-Infrastructure design details are documented in:
-[ADR 0006: Infrastructure and Deployment](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0006-infrastructure-deployment.md)
-
----
-
-## Technology Stack
-
-| Layer                  | Technology                  |
-| ---------------------- | --------------------------- |
-| Web Frontend           | Next.js (Vercel)            |
-| Backend API            | Ruby on Rails (API-only)    |
-| Database               | PostgreSQL (AWS RDS)        |
-| Search                 | PostgreSQL Full Text Search |
-| File Storage           | AWS S3 (Active Storage)     |
-| CDN / TLS / DNS        | CloudFront + ACM + Route53  |
-| Infrastructure as Code | Terraform                   |
-| Error Tracking         | Sentry                      |
-| Logging                | CloudWatch Logs             |
+See [ADR 0006](docs/adr/0006-infrastructure-deployment.md) for infrastructure design details.
 
 ---
 
 ## Repository Structure
 
-This project uses a monorepo layout.
-
-* Rails API: `apps/api`
-* Next.js Web: `apps/web`
-* iOS (SwiftUI): `apps/ios`
-
----
-
-## Design Decisions (ADR)
-
-Major architectural decisions are recorded as ADRs.
-
-* [ADR 0001: REST + OpenAPI](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0001-rest-openapi.md)
-* [ADR 0002: PostgreSQL Full Text Search](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0002-postgresql-full-text-search.md)
-* [ADR 0003: Active Storage Direct Upload](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0003-active-storage-direct-upload.md)
-* [ADR 0004: Authentication Strategy](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0004-authentication-strategy.md)
-* [ADR 0005: Authorization Strategy](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0005-authorization-strategy.md)
-* [ADR 0006: Infrastructure and Deployment](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0006-infrastructure-deployment.md)
-* [ADR 0007: Error Handling Strategy](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0007-error-handling-strategy.md)
-* [ADR 0008: Secret Management](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0008-secret-management.md)
-
----
-
-## API Documentation
-
-OpenAPI specifications are generated via rswag.
-Swagger UI will be publicly available at:
+Monorepo layout:
 
 ```
-https://api.<my-domain>/docs
+apps/
+  api/     # Rails API (Ruby)
+  web/     # Next.js frontend (TypeScript)
+  ios/     # iOS app (SwiftUI) — planned
 ```
 
 ---
 
-## Error Handling
-
-All API errors follow a unified JSON format with stable error codes.
-Full specification is documented in:
-[ADR 0007: Error Handling Strategy](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0007-error-handling-strategy.md)
-
----
-
-## Local Development
+## Getting Started
 
 ### Prerequisites
 
@@ -135,22 +79,16 @@ docker compose up -d
 docker compose exec api bin/rails db:setup
 ```
 
-### Credentials Setup
+### Credentials
 
-This project uses Rails credentials for secret management.
-See [ADR 0008: Secret Management](https://github.com/nyshk97/shuriken-note/blob/main/docs/adr/0008-secret-management.md) for details.
+This project uses Rails encrypted credentials ([ADR 0008](docs/adr/0008-secret-management.md)).
 
-**For forked repositories:** You need to create your own credentials file.
+**For forked repositories**, create your own credentials:
 
 ```bash
-# Remove the existing encrypted file (you can't decrypt it without the original master.key)
 rm apps/api/config/credentials.yml.enc
-
-# Create new credentials
 docker compose exec api bin/rails credentials:edit
 ```
-
-Add the following secrets:
 
 ```yaml
 jwt:
@@ -161,7 +99,7 @@ admin:
   password: "your-secure-password"
 ```
 
-Then create the admin user:
+Then seed the admin user:
 
 ```bash
 docker compose exec api bin/rails db:seed
@@ -169,11 +107,23 @@ docker compose exec api bin/rails db:seed
 
 ---
 
-## Observability
+## Design Decisions (ADR)
 
-* Application errors are tracked with Sentry
-* API logs are collected in CloudWatch Logs
-* All requests include a `request_id` for traceability
+| # | Decision | Status |
+|---|----------|--------|
+| [0001](docs/adr/0001-rest-openapi.md) | REST + OpenAPI | Accepted |
+| [0002](docs/adr/0002-postgres-fts.md) | PostgreSQL Full Text Search | Accepted |
+| [0003](docs/adr/0003-active-storage-direct-upload.md) | Active Storage Direct Upload | Accepted |
+| [0004](docs/adr/0004-authentication-strategy.md) | Authentication Strategy (JWT) | Accepted |
+| [0005](docs/adr/0005-authorization-strategy.md) | Authorization Strategy | Accepted |
+| [0006](docs/adr/0006-infrastructure-deployment.md) | Infrastructure and Deployment | Accepted |
+| [0007](docs/adr/0007-error-handling-strategy.md) | Error Handling Strategy | Proposed |
+| [0008](docs/adr/0008-secret-management.md) | Secret Management | Accepted |
+| [0009](docs/adr/0009-web-token-storage.md) | Web Token Storage | Accepted |
+| [0010](docs/adr/0010-markdown-editor-selection.md) | Markdown Editor Selection | Accepted |
+| [0011](docs/adr/0011-no-slug-for-notes.md) | No Slug for Notes | Accepted |
+| [0012](docs/adr/0012-note-visibility-and-lifecycle.md) | Note Visibility and Lifecycle | Proposed |
+| [0013](docs/adr/0013-vps-migration-hybrid-deployment.md) | VPS Migration and Hybrid Deployment | Proposed |
 
 ---
 
