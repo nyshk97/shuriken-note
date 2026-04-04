@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import Link from "next/link";
 import { MarkdownViewer } from "@/components/markdown-viewer";
+import { extractFirstImageUrl } from "@/lib/markdown";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -45,6 +46,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? article.body.slice(0, 160).replace(/[#*`\n]/g, " ").trim() + (article.body.length > 160 ? "..." : "")
     : "An article by DAN";
 
+  const imageUrl = article.body ? extractFirstImageUrl(article.body) : null;
+
   return {
     title: `${title} — DAN`,
     description,
@@ -54,9 +57,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "article",
       publishedTime: article.created_at,
       modifiedTime: article.updated_at,
+      ...(imageUrl && { images: [imageUrl] }),
     },
     twitter: {
-      card: "summary",
+      card: imageUrl ? "summary_large_image" : "summary",
       title,
       description,
     },
