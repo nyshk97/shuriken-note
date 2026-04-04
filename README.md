@@ -119,12 +119,12 @@ docker compose exec api bin/rails db:seed
 | [0004](docs/adr/0004-authentication-strategy.md) | Authentication Strategy (JWT) | Accepted |
 | [0005](docs/adr/0005-authorization-strategy.md) | Authorization Strategy | Accepted |
 | [0006](docs/adr/0006-infrastructure-deployment.md) | Infrastructure and Deployment | Accepted |
-| [0007](docs/adr/0007-error-handling-strategy.md) | Error Handling Strategy | Proposed |
+| [0007](docs/adr/0007-error-handling-strategy.md) | Error Handling Strategy | Accepted |
 | [0008](docs/adr/0008-secret-management.md) | Secret Management | Accepted |
 | [0009](docs/adr/0009-web-token-storage.md) | Web Token Storage | Accepted |
 | [0010](docs/adr/0010-markdown-editor-selection.md) | Markdown Editor Selection | Accepted |
 | [0011](docs/adr/0011-no-slug-for-notes.md) | No Slug for Notes | Accepted |
-| [0012](docs/adr/0012-note-visibility-and-lifecycle.md) | Note Visibility and Lifecycle | Proposed |
+| [0012](docs/adr/0012-note-visibility-and-lifecycle.md) | Note Visibility and Lifecycle | Accepted |
 | [0013](docs/adr/0013-vps-migration-hybrid-deployment.md) | VPS Migration and Hybrid Deployment | Accepted |
 
 ---
