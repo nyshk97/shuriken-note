@@ -25,15 +25,15 @@ Used daily and continuously improved. All major technical decisions are document
 ```mermaid
 flowchart TD
   Web["Next.js (Vercel)"]
+  VPS["VPS (Kamal)"]
+  API["Rails API (Docker)"]
+  DB[("PostgreSQL")]
   CF["CloudFront"]
-  ALB["Application Load Balancer"]
-  API["Rails API (ECS Fargate)"]
-  DB[("RDS PostgreSQL")]
   S3[("S3 Storage")]
 
-  Web --> CF --> ALB --> API --> DB
+  Web --> VPS --> API --> DB
   API --> S3
-  Web --> S3
+  Web --> CF --> S3
 ```
 
 | Layer        | Technology                                   |
@@ -42,11 +42,11 @@ flowchart TD
 | Backend      | Ruby on Rails 8 (API mode) · RSpec · rswag   |
 | Database     | PostgreSQL 17 + pg_bigm                      |
 | File Storage | AWS S3 (Active Storage Direct Upload)        |
-| CDN / TLS    | CloudFront + ACM                             |
-| IaC          | Terraform                                    |
+| CDN / TLS    | kamal-proxy (Let's Encrypt) · CloudFront     |
+| Deploy       | Kamal                                        |
 | Observability| Sentry · CloudWatch Logs                     |
 
-See [ADR 0006](docs/adr/0006-infrastructure-deployment.md) for infrastructure design details.
+Initially deployed on AWS ECS Fargate + RDS, later [migrated to VPS](docs/adr/0013-vps-migration-hybrid-deployment.md) for cost optimization while keeping S3 for file storage. See [ADR 0006](docs/adr/0006-infrastructure-deployment.md) for the original infrastructure design.
 
 ---
 
@@ -123,7 +123,7 @@ docker compose exec api bin/rails db:seed
 | [0010](docs/adr/0010-markdown-editor-selection.md) | Markdown Editor Selection | Accepted |
 | [0011](docs/adr/0011-no-slug-for-notes.md) | No Slug for Notes | Accepted |
 | [0012](docs/adr/0012-note-visibility-and-lifecycle.md) | Note Visibility and Lifecycle | Proposed |
-| [0013](docs/adr/0013-vps-migration-hybrid-deployment.md) | VPS Migration and Hybrid Deployment | Proposed |
+| [0013](docs/adr/0013-vps-migration-hybrid-deployment.md) | VPS Migration and Hybrid Deployment | Accepted |
 
 ---
 
