@@ -6,6 +6,8 @@ Used daily and continuously improved. All major technical decisions are document
 
 > **[Product Vision](docs/product/vision.md)** · **[Feature Matrix](docs/product/features.md)** · **[Tech Stack](docs/engineering/tech-stack.md)** · **[Contributing](CONTRIBUTING.md)**
 
+![Shuriken Note — Editor](docs/images/editor-screenshot.png)
+
 ---
 
 ## Key Features
