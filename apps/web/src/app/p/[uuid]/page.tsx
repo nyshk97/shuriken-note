@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { MarkdownViewer } from "@/components/markdown-viewer";
+import { DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -61,6 +62,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "article",
       publishedTime: note.created_at,
       modifiedTime: note.updated_at,
+      ...(DEFAULT_OG_IMAGE && { images: [DEFAULT_OG_IMAGE] }),
     },
     twitter: {
       card: "summary",
