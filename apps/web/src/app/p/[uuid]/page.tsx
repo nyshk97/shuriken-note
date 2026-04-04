@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { MarkdownViewer } from "@/components/markdown-viewer";
 import { DEFAULT_OG_IMAGE } from "@/lib/constants";
+import { extractFirstImageUrl } from "@/lib/markdown";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -52,6 +53,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? note.body.slice(0, 160).replace(/[#*`\n]/g, " ").trim() + (note.body.length > 160 ? "..." : "")
     : "A note by DAN";
 
+  const imageUrl = note.body ? extractFirstImageUrl(note.body) : null;
+
   return {
     title,
     description,
@@ -62,10 +65,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "article",
       publishedTime: note.created_at,
       modifiedTime: note.updated_at,
-      ...(DEFAULT_OG_IMAGE && { images: [DEFAULT_OG_IMAGE] }),
+      ...((imageUrl || DEFAULT_OG_IMAGE) && { images: [imageUrl || DEFAULT_OG_IMAGE!] }),
     },
     twitter: {
-      card: "summary",
+      card: imageUrl ? "summary_large_image" : "summary",
       title,
       description,
     },
