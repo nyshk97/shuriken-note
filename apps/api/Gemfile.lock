@@ -263,6 +263,8 @@ GEM
     raabro (1.4.0)
     racc (1.8.1)
     rack (3.2.6)
+    rack-attack (6.8.0)
+      rack (>= 1.0, < 4)
     rack-cors (3.0.0)
       logger
       rack (>= 3.0.14)
@@ -446,6 +448,7 @@ DEPENDENCIES
   kaminari (~> 1.2)
   pg (~> 1.1)
   puma (>= 5.0)
+  rack-attack
   rack-cors
   rails (~> 8.1.2)
   rspec-rails (~> 7.0)
