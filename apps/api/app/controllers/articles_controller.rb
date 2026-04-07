@@ -8,7 +8,7 @@ class ArticlesController < ApplicationController
 
   # GET /articles
   def index
-    articles = Note.where(visibility: :public).active.order(created_at: :desc)
+    articles = Note.where(visibility: :public).active.search(params[:q]).order(created_at: :desc)
     articles = articles.page(page).per(per_page)
 
     render json: {
