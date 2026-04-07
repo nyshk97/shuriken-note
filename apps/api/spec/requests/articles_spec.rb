@@ -13,6 +13,7 @@ RSpec.describe 'Articles API', type: :request do
 
       parameter name: :page, in: :query, type: :integer, required: false, description: 'Page number (default: 1)'
       parameter name: :per_page, in: :query, type: :integer, required: false, description: 'Items per page (default: 20, max: 100)'
+      parameter name: :q, in: :query, type: :string, required: false, description: 'Search query for title and body'
 
       response '200', 'articles returned' do
         schema type: :object,
@@ -73,6 +74,31 @@ RSpec.describe 'Articles API', type: :request do
           data = JSON.parse(response.body)
           expect(data['articles'].length).to eq(1)
           expect(data['articles'][0]['title']).to eq('Public Article')
+        end
+      end
+
+      response '200', 'filters articles by search query' do
+        schema type: :object,
+          properties: {
+            articles: { type: :array },
+            meta: { type: :object }
+          }
+
+        let(:q) { 'Rails' }
+
+        before do
+          create(:note, :public_listed, user: user, title: 'Getting started with Rails', body: 'A guide')
+          create(:note, :public_listed, user: user, title: 'React tips', body: 'Frontend tricks')
+          create(:note, :public_listed, user: user, title: 'API design', body: 'Using Rails effectively')
+        end
+
+        run_test! do |response|
+          data = JSON.parse(response.body)
+          titles = data['articles'].map { |a| a['title'] }
+          expect(titles).to include('Getting started with Rails')
+          expect(titles).to include('API design')
+          expect(titles).not_to include('React tips')
+          expect(data['meta']['total_count']).to eq(2)
         end
       end
 
