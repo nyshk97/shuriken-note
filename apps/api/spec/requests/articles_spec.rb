@@ -26,10 +26,11 @@ RSpec.describe 'Articles API', type: :request do
                   id: { type: :string, format: :uuid },
                   title: { type: :string },
                   excerpt: { type: :string },
+                  likes_count: { type: :integer },
                   created_at: { type: :string, format: 'date-time' },
                   updated_at: { type: :string, format: 'date-time' }
                 },
-                required: %w[id title excerpt created_at updated_at]
+                required: %w[id title excerpt likes_count created_at updated_at]
               }
             },
             meta: {
@@ -135,10 +136,11 @@ RSpec.describe 'Articles API', type: :request do
                 id: { type: :string, format: :uuid },
                 title: { type: :string },
                 body: { type: :string },
+                likes_count: { type: :integer },
                 created_at: { type: :string, format: 'date-time' },
                 updated_at: { type: :string, format: 'date-time' }
               },
-              required: %w[id title body created_at updated_at]
+              required: %w[id title body likes_count created_at updated_at]
             }
           },
           required: %w[article]

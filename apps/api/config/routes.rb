@@ -31,5 +31,7 @@ Rails.application.routes.draw do
   get 'ogp', to: 'ogp#show'
 
   # Public articles (no authentication required)
-  resources :articles, only: %i[index show]
+  resources :articles, only: %i[index show] do
+    post :like, on: :member, to: 'article_likes#create'
+  end
 end

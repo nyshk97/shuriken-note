@@ -30,6 +30,7 @@ class ArticlesController < ApplicationController
       id: note.id,
       title: note.title,
       excerpt: excerpt_from(note.body),
+      likes_count: note.likes_count,
       created_at: note.created_at,
       updated_at: note.updated_at
     }
@@ -40,6 +41,7 @@ class ArticlesController < ApplicationController
       id: note.id,
       title: note.title,
       body: note.body,
+      likes_count: note.likes_count,
       created_at: note.created_at,
       updated_at: note.updated_at
     }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_05_043419) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_07_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_bigm"
   enable_extension "pg_catalog.plpgsql"
@@ -44,11 +44,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_043419) do
     t.index [ "blob_id", "variation_digest" ], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "likes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "ip_address", null: false
+    t.uuid "note_id", null: false
+    t.datetime "updated_at", null: false
+    t.index [ "note_id", "ip_address" ], name: "index_likes_on_note_id_and_ip_address", unique: true
+    t.index [ "note_id" ], name: "index_likes_on_note_id"
+  end
+
   create_table "notes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.boolean "archived", default: false, null: false
     t.text "body", default: "", null: false
     t.datetime "created_at", null: false
     t.datetime "favorited_at"
+    t.integer "likes_count", default: 0, null: false
     t.uuid "parent_note_id"
     t.string "title", default: "", null: false
     t.datetime "updated_at", null: false
@@ -82,6 +92,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_043419) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "likes", "notes", on_delete: :cascade
   add_foreign_key "notes", "notes", column: "parent_note_id", on_delete: :cascade
   add_foreign_key "notes", "users"
   add_foreign_key "refresh_tokens", "users"
