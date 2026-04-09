@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart } from "lucide-react";
+import { Zap } from "lucide-react";
 import { createTipSession } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ const AMOUNT_PRESETS = [
   { label: "¥100", amount: 100 },
   { label: "¥500", amount: 500 },
   { label: "¥1,000", amount: 1000 },
+  { label: "その他", amount: 0 },
 ];
 
 interface TipButtonProps {
@@ -33,19 +34,22 @@ export function TipButton({ articleId }: TipButtonProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const amount =
-    selectedAmount ?? (customAmount ? parseInt(customAmount, 10) : 0);
+  const isCustomMode = selectedAmount === 0;
+  const amount = isCustomMode
+    ? customAmount
+      ? parseInt(customAmount, 10)
+      : 0
+    : (selectedAmount ?? 0);
   const isValidAmount = amount >= 100 && amount <= 10000;
 
   function handlePresetClick(value: number) {
     setSelectedAmount(value);
-    setCustomAmount("");
+    if (value !== 0) setCustomAmount("");
     setError("");
   }
 
   function handleCustomAmountChange(value: string) {
     setCustomAmount(value);
-    setSelectedAmount(null);
     setError("");
   }
 
@@ -89,7 +93,7 @@ export function TipButton({ articleId }: TipButtonProps) {
         className="group flex items-center gap-1.5 text-sm text-gray-400 cursor-pointer hover:text-emerald-500 hover:scale-105 active:scale-95 transition-all"
         aria-label="応援する"
       >
-        <Heart className="size-4 group-hover:text-emerald-500 transition-colors" />
+        <Zap className="size-4 group-hover:text-emerald-500 transition-colors" />
         <span>応援する</span>
       </button>
 
@@ -124,23 +128,26 @@ export function TipButton({ articleId }: TipButtonProps) {
                   </Button>
                 ))}
               </div>
-              <div className="mt-2">
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-                    ¥
-                  </span>
-                  <Input
-                    type="number"
-                    min="100"
-                    max="10000"
-                    step="1"
-                    placeholder="自由入力"
-                    value={customAmount}
-                    onChange={(e) => handleCustomAmountChange(e.target.value)}
-                    className="pl-7 border-gray-300 text-gray-900 placeholder:text-gray-400"
-                  />
+              {isCustomMode && (
+                <div className="mt-2">
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                      ¥
+                    </span>
+                    <Input
+                      type="number"
+                      min="100"
+                      max="10000"
+                      step="1"
+                      placeholder="100〜10,000"
+                      value={customAmount}
+                      onChange={(e) => handleCustomAmountChange(e.target.value)}
+                      className="pl-7 border-gray-300 text-gray-900 placeholder:text-gray-400"
+                      autoFocus
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Name */}
@@ -169,7 +176,7 @@ export function TipButton({ articleId }: TipButtonProps) {
                 id="tip-message"
                 maxLength={500}
                 rows={3}
-                placeholder="ひとことメッセージ..."
+                placeholder="応援メッセージを書く..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 className="mt-1 w-full min-w-0 rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] resize-none"
