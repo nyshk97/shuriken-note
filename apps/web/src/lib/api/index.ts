@@ -17,6 +17,11 @@ export {
   type UpdateNoteInput,
 } from "./notes";
 export {
+  createTipSession,
+  type CreateTipParams,
+  type CreateTipResponse,
+} from "./tips";
+export {
   uploadFile,
   uploadImage,
   detachFile,

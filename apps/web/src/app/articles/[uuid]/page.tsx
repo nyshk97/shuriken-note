@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { MarkdownViewer } from "@/components/markdown-viewer";
 import { LikeButton } from "@/components/like-button";
+import { TipButton } from "@/components/tip-button";
 import { DEFAULT_OG_IMAGE } from "@/lib/constants";
 import { extractFirstImageUrl } from "@/lib/markdown";
 
@@ -117,9 +118,7 @@ export default async function ArticlePage({ params }: PageProps) {
         <footer className="mt-16 border-t border-gray-200 pt-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <LikeButton articleId={article.id} initialCount={article.likes_count} />
-            <p className="text-[10px] tracking-[0.15em] text-gray-300">
-              d0ne1s
-            </p>
+            <TipButton articleId={article.id} />
           </div>
           <Link
             href="/articles"

@@ -33,5 +33,11 @@ Rails.application.routes.draw do
   # Public articles (no authentication required)
   resources :articles, only: %i[index show] do
     post :like, on: :member, to: 'article_likes#create'
+    post :tip, on: :member, to: 'article_tips#create'
+  end
+
+  # Stripe webhook
+  namespace :webhooks do
+    post 'stripe', to: 'stripe#create'
   end
 end

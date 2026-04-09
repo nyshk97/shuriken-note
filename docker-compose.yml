@@ -11,6 +11,9 @@ services:
     environment:
       - DATABASE_URL=postgres://postgres:password@db:5432/shuriken_note_api_development
       - RAILS_ENV=development
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
     depends_on:
       db:
         condition: service_healthy
