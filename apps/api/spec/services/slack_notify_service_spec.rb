@@ -17,6 +17,8 @@ RSpec.describe SlackNotifyService do
         allow(ENV).to receive(:fetch).with('SLACK_WEBHOOK_URL', nil).and_return('https://hooks.slack.com/services/test')
         allow(Net::HTTP).to receive(:new).and_return(mock_http)
         allow(mock_http).to receive(:use_ssl=)
+        allow(mock_http).to receive(:open_timeout=)
+        allow(mock_http).to receive(:read_timeout=)
         allow(mock_http).to receive(:request).and_return(mock_response)
       end
 
