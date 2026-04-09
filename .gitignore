@@ -33,5 +33,10 @@ apps/api/.kamal/.env
 # Rails - Ignore precompiled assets (not applicable for API-only, but good to have)
 apps/api/public/assets
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # macOS
 .DS_Store

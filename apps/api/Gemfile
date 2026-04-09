@@ -72,3 +72,6 @@ group :development, :test do
 end
 
 gem 'kaminari', '~> 1.2'
+
+# Payment processing
+gem 'stripe', '~> 13.0'

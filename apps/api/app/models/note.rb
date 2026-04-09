@@ -5,6 +5,7 @@ class Note < ApplicationRecord
   belongs_to :parent, class_name: 'Note', foreign_key: :parent_note_id, optional: true, inverse_of: :children
   has_many :children, class_name: 'Note', foreign_key: :parent_note_id, dependent: :destroy, inverse_of: :parent
   has_many :likes, dependent: :destroy
+  has_many :tips, dependent: :destroy
   has_many_attached :attachments
 
   # Allowed file types (allowlist approach)
