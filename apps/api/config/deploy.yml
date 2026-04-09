@@ -36,6 +36,9 @@ env:
     - DATABASE_URL
     - AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY
+    - STRIPE_SECRET_KEY
+    - STRIPE_WEBHOOK_SECRET
+    - SLACK_WEBHOOK_URL
 
 accessories:
   db:
