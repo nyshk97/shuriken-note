@@ -78,6 +78,33 @@ function sameTable(a: TableInfo | null, b: TableInfo | null): boolean {
   );
 }
 
+function computeTableToolbarPosition(
+  view: EditorView,
+  tableFrom: number
+): { top: number; left: number } {
+  const coords = view.coordsAtPos(tableFrom);
+  if (!coords) return { top: 0, left: 0 };
+
+  const toolbarHeight = 36;
+  const toolbarWidth = 280;
+  const padding = 8;
+
+  let top = coords.top - toolbarHeight - padding;
+  let left = coords.left;
+
+  if (top < padding) {
+    top = coords.bottom + padding;
+  }
+  if (left + toolbarWidth > window.innerWidth - padding) {
+    left = window.innerWidth - toolbarWidth - padding;
+  }
+  if (left < padding) {
+    left = padding;
+  }
+
+  return { top, left };
+}
+
 /** Wrap the current selection with a markdown mark, or insert an empty pair */
 function toggleWrap(view: EditorView, mark: string): void {
   const { from, to } = view.state.selection.main;
@@ -130,19 +157,24 @@ export function MarkdownEditor({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [tableInfo, setTableInfo] = useState<TableInfo | null>(null);
-  // Bumped on editor scroll so the table toolbar follows the table
-  const [, setScrollTick] = useState(0);
+  // Table toolbar state, computed in CodeMirror event handlers (never
+  // during render) so the position can safely read the view
+  const [tableUi, setTableUi] = useState<{
+    info: TableInfo;
+    position: { top: number; left: number };
+  } | null>(null);
 
   // Latest callbacks accessible from stable CodeMirror extensions
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
   const onFileUploadedRef = useRef(onFileUploaded);
-  onFileUploadedRef.current = onFileUploaded;
   const onScrollRatioRef = useRef(onScrollRatio);
-  onScrollRatioRef.current = onScrollRatio;
   const autoLinkOnPasteRef = useRef(autoLinkOnPaste);
-  autoLinkOnPasteRef.current = autoLinkOnPaste;
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    onFileUploadedRef.current = onFileUploaded;
+    onScrollRatioRef.current = onScrollRatio;
+    autoLinkOnPasteRef.current = autoLinkOnPaste;
+  });
 
   const uploadAndInsertFile = useCallback(async (file: File) => {
     const view = viewRef.current;
@@ -181,11 +213,37 @@ export function MarkdownEditor({
   }, []);
 
   const uploadAndInsertFileRef = useRef(uploadAndInsertFile);
-  uploadAndInsertFileRef.current = uploadAndInsertFile;
+  useEffect(() => {
+    uploadAndInsertFileRef.current = uploadAndInsertFile;
+  });
 
   // Initialize CodeMirror once; props are read through refs
   useEffect(() => {
     if (!containerRef.current) return;
+
+    // Recompute table detection + toolbar position outside CodeMirror's
+    // update cycle (coordsAtPos may not be read during an update) and
+    // coalesce rapid events into one frame
+    let tableUiFrame = 0;
+    const scheduleTableUiUpdate = (view: EditorView) => {
+      cancelAnimationFrame(tableUiFrame);
+      tableUiFrame = requestAnimationFrame(() => {
+        const info = findTableAt(view.state, view.state.selection.main.head);
+        if (!info) {
+          setTableUi((prev) => (prev === null ? prev : null));
+          return;
+        }
+        const position = computeTableToolbarPosition(view, info.from);
+        setTableUi((prev) =>
+          prev &&
+          sameTable(prev.info, info) &&
+          prev.position.top === position.top &&
+          prev.position.left === position.left
+            ? prev
+            : { info, position }
+        );
+      });
+    };
 
     const handlePaste = (event: ClipboardEvent, view: EditorView): boolean => {
       const clipboardData = event.clipboardData;
@@ -255,9 +313,7 @@ export function MarkdownEditor({
           onChangeRef.current?.(update.state.doc.toString());
         }
         if (update.docChanged || update.selectionSet) {
-          const pos = update.state.selection.main.head;
-          const next = findTableAt(update.state, pos);
-          setTableInfo((prev) => (sameTable(prev, next) ? prev : next));
+          scheduleTableUiUpdate(update.view);
         }
       }),
       EditorView.domEventHandlers({
@@ -282,11 +338,13 @@ export function MarkdownEditor({
       if (scrollable > 0) {
         onScrollRatioRef.current?.(dom.scrollTop / scrollable);
       }
-      setScrollTick((tick) => tick + 1);
+      // Keep the table toolbar attached to the table while scrolling
+      scheduleTableUiUpdate(view);
     };
     view.scrollDOM.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
+      cancelAnimationFrame(tableUiFrame);
       view.scrollDOM.removeEventListener("scroll", handleScroll);
       view.destroy();
       viewRef.current = null;
@@ -386,33 +444,6 @@ export function MarkdownEditor({
     }
   }, []);
 
-  const getTableToolbarPosition = useCallback((): { top: number; left: number } => {
-    const view = viewRef.current;
-    if (!view || !tableInfo) return { top: 0, left: 0 };
-
-    const coords = view.coordsAtPos(tableInfo.from);
-    if (!coords) return { top: 0, left: 0 };
-
-    const toolbarHeight = 36;
-    const toolbarWidth = 280;
-    const padding = 8;
-
-    let top = coords.top - toolbarHeight - padding;
-    let left = coords.left;
-
-    if (top < padding) {
-      top = coords.bottom + padding;
-    }
-    if (left + toolbarWidth > window.innerWidth - padding) {
-      left = window.innerWidth - toolbarWidth - padding;
-    }
-    if (left < padding) {
-      left = padding;
-    }
-
-    return { top, left };
-  }, [tableInfo]);
-
   // Drag and drop file upload
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -466,13 +497,13 @@ export function MarkdownEditor({
           onClose={close}
         />
       )}
-      {tableInfo && (
+      {tableUi && (
         <TableToolbar
-          position={getTableToolbarPosition()}
+          position={tableUi.position}
           onOperation={handleTableOperation}
-          isHeaderRow={tableInfo.isHeaderRow}
-          totalRows={tableInfo.totalRows}
-          totalCols={tableInfo.totalCols}
+          isHeaderRow={tableUi.info.isHeaderRow}
+          totalRows={tableUi.info.totalRows}
+          totalCols={tableUi.info.totalCols}
         />
       )}
       {/* Hidden file input for file upload */}

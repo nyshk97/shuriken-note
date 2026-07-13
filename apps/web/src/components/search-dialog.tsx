@@ -26,6 +26,8 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   // Focus input when dialog opens
   useEffect(() => {
     if (open) {
+      // Reset stale state from the previous search session on open
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery("");
       setResults([]);
       setSelectedIndex(0);
@@ -37,6 +39,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   // Debounced search
   useEffect(() => {
     if (!query.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setResults([]);
       return;
     }
