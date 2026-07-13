@@ -5,7 +5,7 @@ image: nyshk97/shuriken-note-api
 servers:
   web:
     hosts:
-      - 198.13.52.210
+      - 133.18.145.214
     options:
       memory: 512m
 
@@ -43,7 +43,7 @@ env:
 accessories:
   db:
     image: ghcr.io/nyshk97/shuriken-note-postgres:17-bigm
-    host: 198.13.52.210
+    host: 133.18.145.214
     port: "127.0.0.1:5432:5432"
     env:
       secret:
