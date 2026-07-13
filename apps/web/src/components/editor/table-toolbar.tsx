@@ -2,7 +2,6 @@
 
 import { forwardRef } from "react";
 import {
-  Plus,
   Minus,
   ArrowUp,
   ArrowDown,

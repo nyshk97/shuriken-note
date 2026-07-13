@@ -22,6 +22,31 @@ function extractHostname(url: string): string {
   }
 }
 
+// Shared per-URL cache holding in-flight requests as well as results,
+// so cards for the same URL (including remounts during live preview
+// re-renders) trigger at most one fetch. Failed entries are evicted
+// so a later mount can retry.
+const ogpCache = new Map<string, Promise<OgpData>>();
+
+function fetchOgpCached(url: string): Promise<OgpData> {
+  const cached = ogpCache.get(url);
+  if (cached) return cached;
+
+  const promise = (async () => {
+    const res = await fetch(`${API_BASE_URL}/ogp?url=${encodeURIComponent(url)}`);
+    if (!res.ok) throw new Error(`OGP fetch failed: ${res.status}`);
+    const data = await res.json();
+    return data.ogp as OgpData;
+  })();
+
+  promise.catch(() => {
+    ogpCache.delete(url);
+  });
+
+  ogpCache.set(url, promise);
+  return promise;
+}
+
 export function LinkCard({ url }: { url: string }) {
   const [ogp, setOgp] = useState<OgpData | null>(null);
   const [error, setError] = useState(false);
@@ -29,20 +54,14 @@ export function LinkCard({ url }: { url: string }) {
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchOgp() {
-      try {
-        const res = await fetch(
-          `${API_BASE_URL}/ogp?url=${encodeURIComponent(url)}`
-        );
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        if (!cancelled) setOgp(data.ogp);
-      } catch {
+    fetchOgpCached(url)
+      .then((data) => {
+        if (!cancelled) setOgp(data);
+      })
+      .catch(() => {
         if (!cancelled) setError(true);
-      }
-    }
+      });
 
-    fetchOgp();
     return () => {
       cancelled = true;
     };
