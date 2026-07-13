@@ -36,6 +36,36 @@ cd apps/web && npx next build
 # 期待: ビルド成功
 ```
 
+### Web ユニットテスト
+
+```bash
+cd apps/web && npx vitest run
+# 期待: 全テスト pass（エディタのテーブル検出・アップロード位置追跡・テーブル操作）
+```
+
+### エディタのブラウザ確認（agent-browser）
+
+```bash
+# 検証用ユーザーを用意（冪等）
+docker compose exec api bin/rails runner \
+  "u = User.find_or_initialize_by(email: 'e2e-test@example.com'); u.password = 'e2e-test-password-1'; u.save!"
+
+# ログイン
+agent-browser --session srkn open http://localhost:3001/login
+agent-browser --session srkn snapshot -i   # Email/Password/UNLOCK のrefを確認
+agent-browser --session srkn fill @e4 "e2e-test@example.com"
+agent-browser --session srkn fill @e5 "e2e-test-password-1"
+agent-browser --session srkn click @e2
+# 期待: /new に遷移し、Edit / Split / View のモードトグルとエディタが表示される
+
+# エディタへの入力はCodeMirrorをフォーカスしてから keyboard type / press を使う
+agent-browser --session srkn eval 'document.querySelector(".cm-content").focus()'
+```
+
+注意:
+- Cmd+/ 等の修飾キーコンボは `press "Meta+/"` が届かないことがある。`eval` で `KeyboardEvent` を `.cm-content` に dispatch する（Reactの描画が非同期なので判定は setTimeout 後に行う）
+- テーブルツールバーの出現判定は `document.querySelector('[aria-label="Table editing toolbar"]')`
+
 ### 公開記事ページ（いいね・チップ）
 
 ```bash

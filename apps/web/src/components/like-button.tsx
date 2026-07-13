@@ -36,6 +36,9 @@ export function LikeButton({ articleId, initialCount }: LikeButtonProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // Hydration-safe localStorage read: must run after mount so the
+    // initial client render matches the server-rendered HTML
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLiked(isAlreadyLiked(articleId));
     fetch(`${API_BASE_URL}/articles/${articleId}`, { cache: "no-store" })
       .then((res) => res.json())

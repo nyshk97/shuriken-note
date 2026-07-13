@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, FileText, Globe, Archive } from "lucide-react";
 import { getNote, getNotes, updateNote, type Note } from "@/lib/api";
 import { DEFAULT_LANDING_PATH } from "@/lib/constants";
-import { VditorEditor } from "@/components/editor";
+import { MarkdownWorkspace } from "@/components/editor";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { useSaveStatus } from "@/contexts/save-status-context";
 import { useCreateNote } from "@/hooks/use-create-note";
@@ -166,70 +166,70 @@ function NoteEditor({ note }: { note: Note }) {
   }, [hasUnsavedChanges]);
 
   return (
-    <div className="max-w-[900px] mx-auto px-12 sm:px-24 pt-12 h-full flex flex-col">
-      {/* Title input */}
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Untitled"
-        className="w-full text-4xl font-bold bg-transparent border-none outline-none text-[var(--workspace-text-primary)] placeholder:text-[var(--workspace-text-tertiary)] mb-6"
-      />
+    <MarkdownWorkspace
+      value={body}
+      onChange={setBody}
+      placeholder="Start writing..."
+      onFileUploaded={handleFileUploaded}
+      header={
+        <>
+          {/* Title input */}
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Untitled"
+            className="w-full text-4xl font-bold bg-transparent border-none outline-none text-[var(--workspace-text-primary)] placeholder:text-[var(--workspace-text-tertiary)] mb-6"
+          />
 
-      {/* Child notes section - only show for parent notes */}
-      {canAddChild && childNotes.length > 0 && (
-        <div className="mb-2">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-[var(--workspace-text-secondary)]">
-              Child notes
-            </h3>
-            <button
-              type="button"
-              onClick={handleAddChild}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded transition-colors"
-            >
-              <Plus size={14} />
-              Add child
-            </button>
+          {/* Child notes section - only show for parent notes */}
+          {canAddChild && childNotes.length > 0 && (
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-[var(--workspace-text-secondary)]">
+                  Child notes
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleAddChild}
+                  className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--workspace-text-secondary)] hover:bg-[var(--workspace-hover)] rounded transition-colors"
+                >
+                  <Plus size={14} />
+                  Add child
+                </button>
+              </div>
+              <div className="space-y-1">
+                {childNotes.map((child) => (
+                  <ChildNoteItem key={child.id} note={child} />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      }
+      footer={
+        <>
+          {/* Shortcut hint */}
+          <div className="py-2 text-xs text-[var(--workspace-text-tertiary)]">
+            <kbd className="px-1.5 py-0.5 rounded bg-[var(--workspace-hover)] text-[var(--workspace-text-secondary)]">
+              {typeof navigator !== "undefined" && navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}
+            </kbd>
+            <span className="mx-1">+</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-[var(--workspace-hover)] text-[var(--workspace-text-secondary)]">
+              /
+            </kbd>
+            <span className="ml-2">for formatting toolbar</span>
           </div>
-          <div className="space-y-1">
-            {childNotes.map((child) => (
-              <ChildNoteItem key={child.id} note={child} />
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Body editor */}
-      <div className="flex-1 min-h-0">
-        <VditorEditor
-          value={body}
-          onChange={setBody}
-          placeholder="Start writing..."
-          className="note-editor"
-          onFileUploaded={handleFileUploaded}
-        />
-      </div>
-
-      {/* Shortcut hint */}
-      <div className="py-2 text-xs text-[var(--workspace-text-tertiary)]">
-        <kbd className="px-1.5 py-0.5 rounded bg-[var(--workspace-hover)] text-[var(--workspace-text-secondary)]">
-          {typeof navigator !== "undefined" && navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}
-        </kbd>
-        <span className="mx-1">+</span>
-        <kbd className="px-1.5 py-0.5 rounded bg-[var(--workspace-hover)] text-[var(--workspace-text-secondary)]">
-          /
-        </kbd>
-        <span className="ml-2">for formatting toolbar</span>
-      </div>
-
-      {/* Error display */}
-      {saveError && (
-        <div className="mt-4 p-3 rounded-md bg-red-500/10 text-red-500 text-sm">
-          Failed to save. Please try again.
-        </div>
-      )}
-    </div>
+          {/* Error display */}
+          {saveError && (
+            <div className="mt-4 p-3 rounded-md bg-red-500/10 text-red-500 text-sm">
+              Failed to save. Please try again.
+            </div>
+          )}
+        </>
+      }
+    />
   );
 }
 

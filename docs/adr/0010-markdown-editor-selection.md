@@ -4,7 +4,7 @@ Date: 2026-01-15
 
 ## Status
 
-Accepted
+Superseded by [0014 Switch to a CodeMirror 6 Two-Pane Markdown Editor](0014-codemirror-two-pane-editor.md)
 
 ## Context
 

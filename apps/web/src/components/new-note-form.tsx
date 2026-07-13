@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createNote, updateNote, type Note } from "@/lib/api";
-import { VditorEditor } from "@/components/editor";
+import { MarkdownWorkspace } from "@/components/editor";
 import { useAutoSave } from "@/hooks/use-auto-save";
 import { useSaveStatus } from "@/contexts/save-status-context";
 
@@ -163,38 +163,37 @@ export function NewNoteForm() {
       : "New note";
 
   return (
-    <div className="max-w-[900px] mx-auto px-12 sm:px-24 pt-12 h-full flex flex-col">
-      <div className="mb-6">
-        <div className="text-sm text-[var(--workspace-text-tertiary)]">
-          {statusLabel}
-          {!statusLabel && "\u00A0"}
-        </div>
-      </div>
+    <MarkdownWorkspace
+      value={body}
+      onChange={setBody}
+      placeholder="Start writing..."
+      onFileUploaded={createdNote ? handleFileUploaded : undefined}
+      header={
+        <>
+          <div className="mb-6">
+            <div className="text-sm text-[var(--workspace-text-tertiary)]">
+              {statusLabel}
+              {!statusLabel && "\u00A0"}
+            </div>
+          </div>
 
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Untitled"
-        autoFocus
-        className="w-full text-4xl font-bold bg-transparent border-none outline-none text-[var(--workspace-text-primary)] placeholder:text-[var(--workspace-text-tertiary)] mb-6"
-      />
-
-      <div className="flex-1 min-h-0">
-        <VditorEditor
-          value={body}
-          onChange={setBody}
-          placeholder="Start writing..."
-          className="note-editor"
-          onFileUploaded={createdNote ? handleFileUploaded : undefined}
-        />
-      </div>
-
-      {createMutation.isError && (
-        <div className="mt-4 p-3 rounded-md bg-red-500/10 text-red-500 text-sm">
-          Failed to create note. Please try again.
-        </div>
-      )}
-    </div>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Untitled"
+            autoFocus
+            className="w-full text-4xl font-bold bg-transparent border-none outline-none text-[var(--workspace-text-primary)] placeholder:text-[var(--workspace-text-tertiary)] mb-6"
+          />
+        </>
+      }
+      footer={
+        createMutation.isError ? (
+          <div className="mt-4 p-3 rounded-md bg-red-500/10 text-red-500 text-sm">
+            Failed to create note. Please try again.
+          </div>
+        ) : undefined
+      }
+    />
   );
 }
