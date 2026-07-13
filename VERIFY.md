@@ -56,4 +56,8 @@ curl -s -X POST http://localhost:3000/articles/<uuid>/tip \
 ```bash
 curl -s -o /dev/null -w "%{http_code}" https://api.d0ne1s.com/up
 # 期待: 200
+
+# DNS キャッシュを疑う場合（本番サーバー直指定）
+curl -s -o /dev/null -w "%{http_code}" --resolve api.d0ne1s.com:443:133.18.145.214 https://api.d0ne1s.com/up
+# 期待: 200
 ```
