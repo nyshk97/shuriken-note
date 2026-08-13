@@ -20,30 +20,32 @@ function isBareLink(children: React.ReactNode, href: string | undefined): boolea
 /**
  * In public variant, paragraphs containing only a bare link
  * (text === href) are rendered as rich link cards.
+ *
+ * Defined once at module scope: recreating the `p` component per render
+ * would give it a new identity, making React unmount and remount every
+ * paragraph (and LinkCard) on each re-render of the viewer.
  */
-function createPublicComponents(): Components {
-  return {
-    p({ children }) {
-      const childArray = React.Children.toArray(children);
+const publicComponents: Components = {
+  p({ children }) {
+    const childArray = React.Children.toArray(children);
 
-      if (childArray.length === 1 && React.isValidElement(childArray[0])) {
-        const child = childArray[0] as React.ReactElement<{
-          href?: string;
-          children?: React.ReactNode;
-        }>;
-        if (
-          child.type === "a" &&
-          child.props.href &&
-          isBareLink(child.props.children, child.props.href)
-        ) {
-          return <LinkCard url={child.props.href} />;
-        }
+    if (childArray.length === 1 && React.isValidElement(childArray[0])) {
+      const child = childArray[0] as React.ReactElement<{
+        href?: string;
+        children?: React.ReactNode;
+      }>;
+      if (
+        child.type === "a" &&
+        child.props.href &&
+        isBareLink(child.props.children, child.props.href)
+      ) {
+        return <LinkCard url={child.props.href} />;
       }
+    }
 
-      return <p>{children}</p>;
-    },
-  };
-}
+    return <p>{children}</p>;
+  },
+};
 
 interface MarkdownViewerProps {
   content: string;
@@ -62,7 +64,7 @@ export function MarkdownViewer({
       ? "znc"
       : "prose prose-slate max-w-none";
 
-  const components = variant === "public" ? createPublicComponents() : undefined;
+  const components = variant === "public" ? publicComponents : undefined;
 
   return (
     <article className={`${baseClassName} ${className ?? ""}`}>

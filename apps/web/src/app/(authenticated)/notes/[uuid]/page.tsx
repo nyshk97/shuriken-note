@@ -63,6 +63,13 @@ export default function NoteEditorPage() {
   return <NoteEditor key={note.id} note={note} />;
 }
 
+// CodeMirror normalizes line endings to "\n" when it loads a document.
+// Normalize up front so a note stored with CRLF doesn't look "changed"
+// the moment it is opened (which would trigger a spurious auto-save).
+function normalizeEol(text: string): string {
+  return text.replace(/\r\n?/g, "\n");
+}
+
 function NoteEditor({ note }: { note: Note }) {
   const queryClient = useQueryClient();
   const { setStatus } = useSaveStatus();
@@ -70,7 +77,7 @@ function NoteEditor({ note }: { note: Note }) {
 
   // Initialize with note values - this runs once per mount
   const [title, setTitle] = useState(note.title);
-  const [body, setBody] = useState(note.body);
+  const [body, setBody] = useState(() => normalizeEol(note.body));
 
   // Fetch child notes if this is a parent note (no parent_note_id)
   const { data: allNotes = [] } = useQuery({
@@ -107,7 +114,11 @@ function NoteEditor({ note }: { note: Note }) {
     [title, body, pendingAttachmentIds]
   );
   const originalData = useMemo(
-    () => ({ title: note.title, body: note.body, attachment_ids: [] as string[] }),
+    () => ({
+      title: note.title,
+      body: normalizeEol(note.body),
+      attachment_ids: [] as string[],
+    }),
     [note.title, note.body]
   );
 

@@ -50,6 +50,10 @@ export function useAutoSave<T>({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingDataRef = useRef<T | null>(null);
   const isSavingRef = useRef(false);
+  // Data snapshot of the last failed save. While the data stays the same,
+  // don't re-schedule an automatic retry (it would hammer the server every
+  // `delay` ms forever). Editing the data or calling flush() retries.
+  const lastFailedDataRef = useRef<T | null>(null);
 
   // Check if current data differs from original
   const hasChanges = !isEqual(data, originalData);
@@ -75,6 +79,7 @@ export function useAutoSave<T>({
 
       try {
         await onSave(dataToSave);
+        lastFailedDataRef.current = null;
         setStatus("saved");
 
         // Reset to idle after a short delay
@@ -82,6 +87,7 @@ export function useAutoSave<T>({
           setStatus((current) => (current === "saved" ? "idle" : current));
         }, 2000);
       } catch (err) {
+        lastFailedDataRef.current = dataToSave;
         setStatus("error");
         setError(err instanceof Error ? err : new Error("Save failed"));
       } finally {
@@ -113,6 +119,15 @@ export function useAutoSave<T>({
       return;
     }
 
+    // The exact same data already failed to save; wait for the user to
+    // change something (or flush) instead of retrying in a loop
+    if (
+      lastFailedDataRef.current !== null &&
+      isEqual(data, lastFailedDataRef.current)
+    ) {
+      return;
+    }
+
     // Clear existing timer
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -135,7 +150,7 @@ export function useAutoSave<T>({
         clearTimeout(timerRef.current);
       }
     };
-  }, [data, hasChanges, delay, performSave]);
+  }, [data, hasChanges, delay, performSave, isEqual]);
 
   // Cleanup on unmount
   useEffect(() => {
