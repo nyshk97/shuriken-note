@@ -308,6 +308,20 @@
   margin: 0.3em 0;
 }
 
+/*
+ * CommonMark renders a list as "loose" when any blank line separates its
+ * items, wrapping each item's text in <p>. Without this reset those
+ * paragraphs pick up the 1.5em body margin and list spacing becomes
+ * uneven (loose items get big gaps, tight nested items stay compact).
+ */
+.znc li>p {
+  margin: 0;
+}
+
+.znc li>p+p {
+  margin-top: 0.5em;
+}
+
 /* Task lists (checkboxes) */
 .znc ul:has(input[type="checkbox"]) {
   list-style: none;
