@@ -364,4 +364,18 @@ RSpec.describe Note do
       expect(note.reload.favorited_at).to be_present
     end
   end
+
+  describe 'normalize_body_line_endings' do
+    let(:user) { create(:user) }
+
+    it 'converts CRLF and lone CR to LF on save' do
+      note = create(:note, user: user, body: "line1\r\nline2\rline3\n")
+      expect(note.reload.body).to eq("line1\nline2\nline3\n")
+    end
+
+    it 'leaves an empty body untouched' do
+      note = create(:note, user: user, body: '')
+      expect(note.reload.body).to eq('')
+    end
+  end
 end

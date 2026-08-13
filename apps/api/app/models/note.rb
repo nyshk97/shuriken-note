@@ -35,6 +35,7 @@ class Note < ApplicationRecord
   validate :parent_must_belong_to_same_user
 
   before_save :clear_favorite_on_archive
+  before_save :normalize_body_line_endings
 
   scope :active, -> { where(archived: false) }
   scope :not_personal, -> { where.not(visibility: :personal) }
@@ -86,6 +87,12 @@ class Note < ApplicationRecord
 
   def clear_favorite_on_archive
     self.favorited_at = nil if archived_changed? && archived?
+  end
+
+  # Editors (CodeMirror etc.) work with "\n"; storing CRLF makes a freshly
+  # opened note look modified and triggers spurious auto-saves
+  def normalize_body_line_endings
+    self.body = body.gsub(/\r\n?/, "\n") if body_changed? && body.present?
   end
 
   # Full-text search using pg_bigm
