@@ -102,6 +102,21 @@ const dailyDrivers: AppEntry[] = [
     repo: "https://github.com/nyshk97/menubar-tidy",
     forkOf: { name: "thaw-app/Thaw", href: "https://github.com/thaw-app/Thaw" },
   },
+  {
+    name: "Shoplist",
+    description: "A simple shopping list — an iOS app backed by a Workers API.",
+    platforms: ["iOS"],
+    stack: "SwiftUI / Hono / Cloudflare Workers",
+    repo: "https://github.com/nyshk97/shoplist",
+  },
+  {
+    name: "Vid",
+    description:
+      "A gesture-driven video player and trimmer for iOS — long-press for 2x speed, trim in place.",
+    platforms: ["iOS"],
+    stack: "SwiftUI / AVKit",
+    repo: "https://github.com/nyshk97/video-player",
+  },
 ];
 
 const dormant: AppEntry[] = [
@@ -120,21 +135,6 @@ const dormant: AppEntry[] = [
     platforms: ["macOS"],
     stack: "Swift",
     repo: "https://github.com/nyshk97/diff-viewer",
-  },
-  {
-    name: "Shoplist",
-    description: "A simple shopping list — an iOS app backed by a Workers API.",
-    platforms: ["iOS"],
-    stack: "SwiftUI / Hono / Cloudflare Workers",
-    repo: "https://github.com/nyshk97/shoplist",
-  },
-  {
-    name: "Vid",
-    description:
-      "A gesture-driven video player and trimmer for iOS — long-press for 2x speed, trim in place.",
-    platforms: ["iOS"],
-    stack: "SwiftUI / AVKit",
-    repo: "https://github.com/nyshk97/video-player",
   },
 ];
 
