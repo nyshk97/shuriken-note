@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { DEFAULT_LANDING_PATH } from "@/lib/constants";
 
 // Routes that are public (no authentication required)
-const publicRoutes = ["/p", "/articles"];
+const publicRoutes = ["/p", "/articles", "/apps"];
 
 // Routes that should redirect to default landing if already authenticated
 const authRoutes = ["/login"];
