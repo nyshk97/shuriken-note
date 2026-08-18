@@ -102,6 +102,9 @@ const dailyDrivers: AppEntry[] = [
     repo: "https://github.com/nyshk97/menubar-tidy",
     forkOf: { name: "thaw-app/Thaw", href: "https://github.com/thaw-app/Thaw" },
   },
+];
+
+const dormant: AppEntry[] = [
   {
     name: "tab-trace",
     description:
@@ -110,9 +113,6 @@ const dailyDrivers: AppEntry[] = [
     stack: "JavaScript",
     repo: "https://github.com/nyshk97/tab-trace",
   },
-];
-
-const dormant: AppEntry[] = [
   {
     name: "DiffViewer",
     description:
